@@ -10,7 +10,7 @@ Projeto final da disciplina: aplicação web em Yesod com 7+ tabelas, CRUD, uma 
 | Banco | **PostgreSQL** (`persistent-postgresql`) | Relacional "de verdade" e fácil de hospedar de graça (Neon/Render). Em dev, roda via Docker |
 | Domínio | **Biblioteca comunitária**: acervo, sócios, empréstimos, reservas | As 7+ tabelas saem do próprio domínio, sem nenhuma artificial |
 | APIs externas | **Open Library** (busca por ISBN) e **ViaCEP** (endereço do sócio) | Os dados recebidos são gravados e usados, não só consultados |
-| Build | `stack` + template `yesod-postgres` | O scaffold já vem com Persistent, formulários, sessão e testes configurados |
+| Build | `stack` + template `yesodweb/postgres` (lts-20.26, GHC 9.2.8) | O scaffold já vem com Persistent, formulários, sessão e testes configurados |
 | Hospedagem (opcional) | Render ou Fly.io + Neon Postgres | Conta como diferencial na apresentação |
 
 ## Modelo de dados (9 tabelas)
@@ -44,11 +44,11 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 
 ## Fase 0 — Ambiente e repositório
 - [ ] 0.1 Criar o repositório no GitHub (privado ou público) e adicionar o professor e os integrantes
-- [ ] 0.2 Gerar o scaffold: `stack new biblioteca yesod-postgres` e mover para a raiz do repo
-- [ ] 0.3 `docker-compose.yml` com Postgres 16 (usuário, senha e banco iguais aos do `config/settings.yml`)
-- [ ] 0.4 Rodar `stack build` e `stack exec -- yesod devel` e abrir em `localhost:3000`
-- [ ] 0.5 `.gitignore` (`.stack-work/`, `static/tmp/`, `.env`), mais um `.env.example`
-- [ ] 0.6 Limpar o scaffold: remover o `Comment` e a página de exemplo e manter o `User`, se usarmos autenticação
+- [x] 0.2 Gerar o scaffold: `stack new biblioteca yesodweb/postgres` e mover para a raiz do repo
+- [x] 0.3 `docker-compose.yml` com Postgres 16 na porta 5433 do host (a 5432 costuma estar ocupada), banco `biblioteca` + `biblioteca_test`
+- [x] 0.4 Rodar `stack build` e `stack exec biblioteca` (ou `yesod devel`) e abrir em `localhost:3000`
+- [x] 0.5 `.gitignore` (`.stack-work/`, `static/tmp/`, `.env`), mais um `.env.example`
+- [x] 0.6 Limpar o scaffold: remover o `Comment` e a página de exemplo e manter o `User`, se usarmos autenticação
 - [ ] 0.7 Primeiro commit e configuração da proteção da `main` (PR obrigatório)
 
 ## Fase 1 — Modelo de dados
@@ -64,7 +64,7 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 - [ ] 2.3 Exibir mensagens de sucesso e erro via `setMessage`/`getMessage`
 - [ ] 2.4 Página inicial (`HomeR`) com contadores: livros, exemplares disponíveis, empréstimos atrasados
 
-## Fase 3 — CRUDs simples (Autor, Editora, Categoria)
+## Fase 3 — CRUDs simples (Autor, Editora, Categoria — 1 PR por entidade)
 Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 ```
 /autores              AutoresR      GET POST
@@ -79,13 +79,13 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [ ] 3.4 Bloquear a exclusão quando houver livros vinculados, com mensagem amigável
 - [ ] 3.5 Extrair um helper de layout/formulário em comum para não repetir código
 
-## Fase 4 — Livros + Open Library
-- [ ] 4.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)
-- [ ] 4.2 Multiselect de autores, gravando em `LivroAutor` (no update, apagar e reinserir na mesma transação)
-- [ ] 4.3 Página de detalhe: autores, exemplares, disponibilidade e capa
-- [ ] 4.4 Módulo `Integracao/OpenLibrary.hs`: `GET https://openlibrary.org/api/books?bibkeys=ISBN:<isbn>&format=json&jscmd=data` com `http-conduit` + `aeson`
-- [ ] 4.5 Botão "Buscar por ISBN" que preenche título, ano, sinopse e capa, cria a editora e os autores que ainda não existem e salva tudo
-- [ ] 4.6 Tratar ISBN inexistente, timeout e JSON inesperado (`Either`/`Maybe`), mostrando a mensagem ao usuário sem derrubar a página
+## Fase 4 — Livros + Open Library (2 PRs: 4a CRUD, 4b integração)
+- [ ] 4a.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)
+- [ ] 4a.2 Multiselect de autores, gravando em `LivroAutor` (no update, apagar e reinserir na mesma transação)
+- [ ] 4a.3 Página de detalhe: autores, exemplares, disponibilidade e capa
+- [ ] 4b.4 Módulo `Integracao/OpenLibrary.hs`: `GET https://openlibrary.org/api/books?bibkeys=ISBN:<isbn>&format=json&jscmd=data` com `http-conduit` + `aeson`
+- [ ] 4b.5 Botão "Buscar por ISBN" que preenche título, ano, sinopse e capa, cria a editora e os autores que ainda não existem e salva tudo
+- [ ] 4b.6 Tratar ISBN inexistente, timeout e JSON inesperado (`Either`/`Maybe`), mostrando a mensagem ao usuário sem derrubar a página
 - [ ] 4.7 Busca e filtro na listagem (por título e por categoria)
 
 ## Fase 5 — Exemplares
@@ -100,7 +100,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [ ] 6.4 Tratar `{"erro": true}` (CEP inexistente) e falhas de rede
 - [ ] 6.5 Detalhe do sócio com o histórico de empréstimos e as reservas
 
-## Fase 7 — Empréstimos e reservas (regras de negócio)
+## Fase 7 — Empréstimos e reservas (2 PRs: 7a empréstimo, 7b reserva)
 - [ ] 7.1 Novo empréstimo: escolher o sócio e um exemplar disponível; `dataPrevista` = hoje + 14 dias
 - [ ] 7.2 Validar o limite de 3 empréstimos abertos por sócio e se o exemplar está disponível (tudo em `runDB`, na mesma transação)
 - [ ] 7.3 Devolução: grava `dataDevolucao`, calcula a multa (R$ 1,00/dia de atraso) e libera o exemplar
@@ -122,7 +122,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 
 ## Fase 10 — Hospedagem (opcional)
 - [ ] 10.1 `Dockerfile` multi-stage (build com stack, runtime enxuto)
-- [ ] 10.2 Criar o Postgres no Neon e configurar `PGHOST`/`PGUSER`/`PGPASS`/`PGDATABASE` no serviço
+- [ ] 10.2 Criar o Postgres no Neon e configurar `YESOD_PGHOST`/`YESOD_PGPORT`/`YESOD_PGUSER`/`YESOD_PGPASS`/`YESOD_PGDATABASE` no serviço
 - [ ] 10.3 Deploy no Render/Fly.io e teste do fluxo completo na URL pública
 - [ ] 10.4 Rodar o seed no ambiente hospedado
 
