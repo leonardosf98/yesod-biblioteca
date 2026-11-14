@@ -23,9 +23,11 @@ Projeto final da disciplina: aplicação web em Yesod com 7+ tabelas, CRUD, uma 
 | `Livro` | titulo, isbn (único), ano, sinopse, capaUrl | FK editora, FK categoria |
 | `LivroAutor` | — | FK livro, FK autor (tabela de junção, PK composta) |
 | `Exemplar` | codigo (único), estado (bom/danificado/perdido), disponivel | FK livro |
-| `Socio` | nome, email (único), telefone, cep, logradouro, bairro, cidade, uf | — |
-| `Emprestimo` | dataEmprestimo, dataPrevista, dataDevolucao (nula até a devolução), multa | FK exemplar, FK socio |
+| `Socio` | nome, email (único), telefone, cep, logradouro, numero, bairro, cidade, uf | — |
+| `Emprestimo` | dataEmprestimo, dataPrevista, dataDevolucao (nula até a devolução), multaCentavos (inteiro, evita erro de arredondamento) | FK exemplar, FK socio |
 | `Reserva` | dataReserva, status (ativa/atendida/cancelada) | FK livro, FK socio |
+
+Todas as FKs são `ON DELETE RESTRICT`, menos `LivroAutor → Livro` (`CASCADE`): o próprio banco impede apagar o que ainda é referenciado.
 
 Regras de negócio: exemplar emprestado fica indisponível; não dá para excluir um livro que tem exemplares emprestados; a multa é calculada por dia de atraso; um sócio só pode ter até 3 empréstimos abertos.
 
@@ -54,10 +56,10 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 - [ ] 0.9 Pacote de evidências por PR com `leonardosf98/pr-risk-tier@v1` e regras em `.github/pr-risk-tier.toml` (docs = 0, padrão = 1, modelo/rotas/integrações = 2, Foundation/config/build/CI = 3)
 
 ## Fase 1 — Modelo de dados
-- [ ] 1.1 Escrever as 9 entidades em `config/models.persistentmodels`, com `UniqueIsbn`, `UniqueEmail`, `UniqueCodigo` e `UniqueLivroAutor`
-- [ ] 1.2 Tipos derivados para os enums `EstadoExemplar` e `StatusReserva` (`derivePersistField`)
-- [ ] 1.3 Conferir a migração automática (`runMigration migrateAll`) e as FKs criadas no Postgres (`\d livro`)
-- [ ] 1.4 Script de seed (`app/Seed.hs` ou um handler `/dev/seed` só para dev) com dados de exemplo
+- [x] 1.1 Escrever as 9 entidades em `config/models.persistentmodels`, com `UniqueIsbn`, `UniqueSocioEmail`, `UniqueCodigo` e PK composta em `LivroAutor` (`UniqueEmail` já é do scaffold)
+- [x] 1.2 Tipos derivados para os enums `EstadoExemplar` e `StatusReserva` (`derivePersistField`, em `src/Model/Tipos.hs`)
+- [x] 1.3 Conferir a migração automática (`runMigration migrateAll`) e as FKs criadas no Postgres (`\d livro`)
+- [x] 1.4 Seed idempotente em `src/Seed.hs`, executável `stack exec biblioteca-seed`, com testes em `test/SeedSpec.hs`
 - [ ] 1.5 Desenhar o diagrama ER simples (opcional, ajuda na arguição)
 
 ## Fase 2 — Layout e navegação

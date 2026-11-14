@@ -75,6 +75,12 @@ executables:
     when:
     - condition: flag(library-only)
       buildable: false
+  biblioteca-seed:
+    main: seed.hs
+    source-dirs: app
+    other-modules: []
+    dependencies:
+    - biblioteca
 
 # Test suite
 tests:

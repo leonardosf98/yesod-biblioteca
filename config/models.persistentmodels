@@ -11,3 +11,74 @@ Email
     userId UserId Maybe
     verkey Text Maybe
     UniqueEmail email
+
+Autor
+    nome Text
+    nacionalidade Text Maybe
+    deriving Show
+
+Editora
+    nome Text
+    cidade Text Maybe
+    UniqueEditoraNome nome
+    deriving Show
+
+Categoria
+    nome Text
+    descricao Text Maybe
+    UniqueCategoriaNome nome
+    deriving Show
+
+Livro
+    titulo Text
+    isbn Text Maybe
+    ano Int Maybe
+    sinopse Text Maybe
+    capaUrl Text Maybe
+    editoraId EditoraId Maybe
+    categoriaId CategoriaId
+    UniqueIsbn isbn !force
+    deriving Show
+
+LivroAutor
+    livroId LivroId OnDeleteCascade
+    autorId AutorId
+    Primary livroId autorId
+    deriving Show
+
+Exemplar
+    livroId LivroId
+    codigo Text
+    estado EstadoExemplar
+    disponivel Bool default=true
+    UniqueCodigo codigo
+    deriving Show
+
+Socio
+    nome Text
+    email Text
+    telefone Text Maybe
+    cep Text Maybe
+    logradouro Text Maybe
+    numero Text Maybe
+    bairro Text Maybe
+    cidade Text Maybe
+    uf Text Maybe
+    UniqueSocioEmail email
+    deriving Show
+
+Emprestimo
+    exemplarId ExemplarId
+    socioId SocioId
+    dataEmprestimo Day
+    dataPrevista Day
+    dataDevolucao Day Maybe
+    multaCentavos Int default=0
+    deriving Show
+
+Reserva
+    livroId LivroId
+    socioId SocioId
+    dataReserva Day
+    status StatusReserva
+    deriving Show
