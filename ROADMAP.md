@@ -7,11 +7,11 @@ Projeto final da disciplina: aplicação web em Yesod com 7+ tabelas, CRUD, uma 
 | Tema | Escolha | Por quê |
 |---|---|---|
 | Arquitetura | **Opção A — monolítica** (Yesod + Hamlet/Lucius) | Um só projeto e um só deploy. Rotas, handlers e templates ficam no mesmo lugar, e a arguição cobra exatamente isso |
-| Banco | **PostgreSQL** (`persistent-postgresql`) | Relacional "de verdade" e fácil de hospedar de graça (Neon/Render). Em dev, roda via Docker |
+| Banco | **PostgreSQL** (`persistent-postgresql`) | Relacional "de verdade" e já temos um Supabase para hospedar. Em dev, roda via Docker |
 | Domínio | **Biblioteca comunitária**: acervo, sócios, empréstimos, reservas | As 7+ tabelas saem do próprio domínio, sem nenhuma artificial |
 | APIs externas | **Open Library** (busca por ISBN) e **ViaCEP** (endereço do sócio) | Os dados recebidos são gravados e usados, não só consultados |
 | Build | `stack` + template `yesodweb/postgres` (lts-20.26, GHC 9.2.8) | O scaffold já vem com Persistent, formulários, sessão e testes configurados |
-| Hospedagem (opcional) | Render ou Fly.io + Neon Postgres | Conta como diferencial na apresentação |
+| Hospedagem (opcional) | Render ou Fly.io + Postgres no Supabase | Conta como diferencial na apresentação |
 
 ## Modelo de dados (9 tabelas)
 
@@ -43,13 +43,15 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 ---
 
 ## Fase 0 — Ambiente e repositório
-- [ ] 0.1 Criar o repositório no GitHub (privado ou público) e adicionar o professor e os integrantes
+- [x] 0.1 Criar o repositório no GitHub: público, em https://github.com/leonardosf98/yesod-biblioteca
 - [x] 0.2 Gerar o scaffold: `stack new biblioteca yesodweb/postgres` e mover para a raiz do repo
 - [x] 0.3 `docker-compose.yml` com Postgres 16 na porta 5433 do host (a 5432 costuma estar ocupada), banco `biblioteca` + `biblioteca_test`
 - [x] 0.4 Rodar `stack build` e `stack exec biblioteca` (ou `yesod devel`) e abrir em `localhost:3000`
 - [x] 0.5 `.gitignore` (`.stack-work/`, `static/tmp/`, `.env`), mais um `.env.example`
 - [x] 0.6 Limpar o scaffold: remover o `Comment` e a página de exemplo e manter o `User`, se usarmos autenticação
-- [ ] 0.7 Primeiro commit e configuração da proteção da `main` (PR obrigatório)
+- [x] 0.7 Primeiro commit e configuração da proteção da `main` (PR obrigatório)
+- [ ] 0.8 CI no GitHub Actions: `stack build` + `stack test` com Postgres como service e cache de `~/.stack`
+- [ ] 0.9 Pacote de evidências por PR com `leonardosf98/pr-risk-tier@v1` e regras em `.github/pr-risk-tier.toml` (docs = 0, padrão = 1, modelo/rotas/integrações = 2, Foundation/config/build/CI = 3)
 
 ## Fase 1 — Modelo de dados
 - [ ] 1.1 Escrever as 9 entidades em `config/models.persistentmodels`, com `UniqueIsbn`, `UniqueEmail`, `UniqueCodigo` e `UniqueLivroAutor`
@@ -83,7 +85,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [ ] 4a.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)
 - [ ] 4a.2 Multiselect de autores, gravando em `LivroAutor` (no update, apagar e reinserir na mesma transação)
 - [ ] 4a.3 Página de detalhe: autores, exemplares, disponibilidade e capa
-- [ ] 4b.4 Módulo `Integracao/OpenLibrary.hs`: `GET https://openlibrary.org/api/books?bibkeys=ISBN:<isbn>&format=json&jscmd=data` com `http-conduit` + `aeson`
+- [ ] 4b.4 Módulo `Integracao/OpenLibrary.hs`: `GET https://openlibrary.org/api/books?bibkeys=ISBN:<isbn>&format=json&jscmd=data` com `http-conduit` + `aeson`; incluir `src/Integracao/**` na regra de tier 2 do `.github/pr-risk-tier.toml`
 - [ ] 4b.5 Botão "Buscar por ISBN" que preenche título, ano, sinopse e capa, cria a editora e os autores que ainda não existem e salva tudo
 - [ ] 4b.6 Tratar ISBN inexistente, timeout e JSON inesperado (`Either`/`Maybe`), mostrando a mensagem ao usuário sem derrubar a página
 - [ ] 4.7 Busca e filtro na listagem (por título e por categoria)
@@ -121,8 +123,8 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [ ] 9.2 Proteger rotas de escrita via `isAuthorized`
 
 ## Fase 10 — Hospedagem (opcional)
-- [ ] 10.1 `Dockerfile` multi-stage (build com stack, runtime enxuto)
-- [ ] 10.2 Criar o Postgres no Neon e configurar `YESOD_PGHOST`/`YESOD_PGPORT`/`YESOD_PGUSER`/`YESOD_PGPASS`/`YESOD_PGDATABASE` no serviço
+- [ ] 10.1 `Dockerfile` multi-stage (build com stack, runtime enxuto); incluir `Dockerfile` na regra de tier 3 do `.github/pr-risk-tier.toml`
+- [ ] 10.2 Usar o Postgres do Supabase (Session pooler, IPv4, `sslmode=require`) e configurar `YESOD_PGHOST`/`YESOD_PGPORT`/`YESOD_PGUSER`/`YESOD_PGPASS`/`YESOD_PGDATABASE` no serviço
 - [ ] 10.3 Deploy no Render/Fly.io e teste do fluxo completo na URL pública
 - [ ] 10.4 Rodar o seed no ambiente hospedado
 
