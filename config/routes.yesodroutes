@@ -52,3 +52,7 @@
 /emprestimos/#EmprestimoId/editar EmprestimoEditarR GET
 /emprestimos/#EmprestimoId/devolver EmprestimoDevolverR POST
 /emprestimos/#EmprestimoId/excluir EmprestimoExcluirR POST
+
+/reservas ReservasR GET POST
+!/reservas/nova ReservaNovaR GET
+/reservas/#ReservaId/cancelar ReservaCancelarR POST

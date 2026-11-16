@@ -7,6 +7,7 @@ import qualified Data.Map.Strict as Map
 import Form.Comum
 import Import
 import Regras.Emprestimo
+import Regras.Reserva (filaDeReservas)
 
 data Situacao = Abertos | Atrasados | Devolvidos | Todos
     deriving (Eq, Show, Read, Enum, Bounded)
@@ -144,11 +145,21 @@ postEmprestimoR emprestimoId = do
 postEmprestimoDevolverR :: EmprestimoId -> Handler Html
 postEmprestimoDevolverR emprestimoId = do
     dia <- hoje
-    devolvido <- runDB $ registrarDevolucao emprestimoId dia
+    (devolvido, fila) <- runDB $ do
+        devolvido <- registrarDevolucao emprestimoId dia
+        emprestimo <- get404 emprestimoId
+        exemplar <- getJust (emprestimoExemplarId emprestimo)
+        fila <- filaDeReservas (exemplarLivroId exemplar)
+        primeiro <- maybe (return Nothing) (get . reservaSocioId . entityVal) (headMay fila)
+        return (devolvido, (length fila, primeiro))
     case devolvido of
         Left erro -> mensagem "danger" erro
         Right 0 -> mensagem "success" "Devolução registrada, sem multa."
         Right multa -> mensagem "warning" ("Devolução registrada com atraso. Multa: " <> formatarCentavos multa <> ".")
+    case (devolvido, fila) of
+        (Right _, (quantidade, Just socio)) ->
+            mensagem "info" ("Este livro tem " <> tshow quantidade <> " reserva(s) ativa(s). Primeiro da fila: " <> socioNome socio <> ".")
+        _ -> return ()
     redirect (EmprestimoR emprestimoId)
 
 postEmprestimoExcluirR :: EmprestimoId -> Handler Html
