@@ -17,6 +17,7 @@ import Data.Time (addDays, diffDays, getCurrentTimeZone, localDay, utcToLocalTim
 import Database.Persist.Sql (updateWhereCount)
 import Model
 import Model.Tipos
+import Regras.Reserva (atenderReserva)
 
 prazoDias :: Integer
 prazoDias = 14
@@ -57,14 +58,16 @@ realizarEmprestimo socioId exemplarId dia = do
                     [ExemplarDisponivel =. False]
                 if reservado == 0
                     then return (Left "Exemplar indisponível.")
-                    else Right <$> insert Emprestimo
-                        { emprestimoExemplarId = exemplarId
-                        , emprestimoSocioId = socioId
-                        , emprestimoDataEmprestimo = dia
-                        , emprestimoDataPrevista = addDays prazoDias dia
-                        , emprestimoDataDevolucao = Nothing
-                        , emprestimoMultaCentavos = 0
-                        }
+                    else do
+                        atenderReserva socioId (exemplarLivroId e)
+                        Right <$> insert Emprestimo
+                            { emprestimoExemplarId = exemplarId
+                            , emprestimoSocioId = socioId
+                            , emprestimoDataEmprestimo = dia
+                            , emprestimoDataPrevista = addDays prazoDias dia
+                            , emprestimoDataDevolucao = Nothing
+                            , emprestimoMultaCentavos = 0
+                            }
 
 registrarDevolucao :: MonadIO m => EmprestimoId -> Day -> ReaderT SqlBackend m (Either Text Int)
 registrarDevolucao emprestimoId dia = do

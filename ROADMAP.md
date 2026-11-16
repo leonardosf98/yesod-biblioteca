@@ -111,8 +111,8 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 7.3 Devolução: grava `dataDevolucao`, calcula a multa (R$ 1,00/dia de atraso) e libera o exemplar
 - [x] 7.4 Listagem com filtros: abertos, atrasados, devolvidos e todos (`selectList` + mapas para nomes de sócio e livro)
 - [x] 7.5 Prorrogar o prazo e excluir empréstimo aberto (lançado por engano), liberando o exemplar; devolvido é histórico e não sai
-- [ ] 7.6 Reserva: criar para um livro sem exemplar disponível; cancelar; marcar como atendida quando o empréstimo é criado
-- [ ] 7.7 Ao devolver, avisar se existe reserva ativa para aquele livro
+- [x] 7.6 Reserva: criar só para livro sem exemplar disponível (uma ativa por sócio e livro); cancelar; marcar como atendida quando o próprio sócio pega o livro emprestado (`src/Regras/Reserva.hs`)
+- [x] 7.7 Ao devolver, avisar se existe reserva ativa para aquele livro
 
 ## Fase 8 — Qualidade e tratamento de erros
 - [ ] 8.1 Páginas 404/500 personalizadas (`errorHandler` em `Foundation.hs`)
