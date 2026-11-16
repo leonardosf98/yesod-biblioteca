@@ -26,3 +26,9 @@
 /categorias/#CategoriaId CategoriaR GET POST
 /categorias/#CategoriaId/editar CategoriaEditarR GET
 /categorias/#CategoriaId/excluir CategoriaExcluirR POST
+
+/livros LivrosR GET POST
+!/livros/novo LivroNovoR GET
+/livros/#LivroId LivroR GET POST
+/livros/#LivroId/editar LivroEditarR GET
+/livros/#LivroId/excluir LivroExcluirR POST
