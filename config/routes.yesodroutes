@@ -39,3 +39,9 @@
 /exemplares/#ExemplarId ExemplarR POST
 /exemplares/#ExemplarId/editar ExemplarEditarR GET
 /exemplares/#ExemplarId/excluir ExemplarExcluirR POST
+
+/socios SociosR GET POST
+!/socios/novo SocioNovoR GET
+/socios/#SocioId SocioR GET POST
+/socios/#SocioId/editar SocioEditarR GET
+/socios/#SocioId/excluir SocioExcluirR POST

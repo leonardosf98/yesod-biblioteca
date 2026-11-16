@@ -1,0 +1,45 @@
+<div .page-header>
+    <h1>#{socioNome socio}
+
+<dl .dl-horizontal>
+    <dt>E-mail
+    <dd>#{socioEmail socio}
+    <dt>Telefone
+    <dd>#{fromMaybe "—" (socioTelefone socio)}
+    <dt>CEP
+    <dd>#{fromMaybe "—" (socioCep socio)}
+    <dt>Endereço
+    <dd .endereco>#{fromMaybe "—" (enderecoCompleto socio)}
+
+<h3>Empréstimos
+$if null emprestimos
+    <p .text-muted>Nenhum empréstimo.
+$else
+    <table .table .table-condensed .emprestimos>
+        <thead>
+            <tr>
+                <th>Livro
+                <th>Exemplar
+                <th>Emprestado em
+                <th>Devolver até
+                <th>Devolvido em
+        <tbody>
+            $forall Entity _ emprestimo <- emprestimos
+                <tr>
+                    <td>#{tituloDoExemplar (emprestimoExemplarId emprestimo)}
+                    <td>#{codigoDoExemplar (emprestimoExemplarId emprestimo)}
+                    <td>#{show (emprestimoDataEmprestimo emprestimo)}
+                    <td>#{show (emprestimoDataPrevista emprestimo)}
+                    <td>#{maybe "em aberto" show (emprestimoDataDevolucao emprestimo)}
+
+<h3>Reservas
+$if null reservas
+    <p .text-muted>Nenhuma reserva.
+$else
+    <ul .reservas>
+        $forall Entity _ reserva <- reservas
+            <li>#{tituloDoLivro (reservaLivroId reserva)} — #{show (reservaStatus reserva)} desde #{show (reservaDataReserva reserva)}
+
+<div .acoes>
+    <a .btn .btn-default href=@{SocioEditarR socioId}>Editar
+    ^{botaoExcluir (SocioExcluirR socioId)}
