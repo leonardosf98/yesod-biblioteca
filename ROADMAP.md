@@ -115,11 +115,12 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 7.7 Ao devolver, avisar se existe reserva ativa para aquele livro
 
 ## Fase 8 — Qualidade e tratamento de erros
-- [ ] 8.1 Páginas 404/500 personalizadas (`errorHandler` em `Foundation.hs`)
-- [ ] 8.2 Validações de formulário com mensagens em português
-- [ ] 8.3 Testes com `yesod-test` para pelo menos um CRUD e para a regra de empréstimo
-- [ ] 8.4 Revisar a organização: `Handler/<Entidade>.hs`, `Integracao/*.hs`, `Form/*.hs`
-- [ ] 8.5 `hlint` e build sem warnings
+- [x] 8.1 Páginas 404/500/403 em português (`errorHandler` em `Foundation.hs`); breadcrumbs usam `get` com fallback para não gerar outro 404 dentro da página de erro
+- [x] 8.2 Validações de formulário com mensagens em português
+- [x] 8.3 Testes com `yesod-test` para todos os CRUDs, regras de empréstimo e reserva, parsers das APIs e páginas de erro
+- [x] 8.4 Organização: `Handler/<Entidade>.hs`, `Regras/*.hs`, `Integracao/*.hs`, `Form/Comum.hs`, `Formato.hs`
+- [ ] 8.5 Build sem warnings com `-Wall` (feito); `hlint` não está instalado na máquina nem no CI
+- [x] 8.6 Datas exibidas como dd/mm/aaaa (`formatarData`)
 
 ## Fase 9 — Autenticação (opcional, diferencial)
 - [ ] 9.1 Login de bibliotecário com `yesod-auth` (`Auth.HashDB` ou e-mail)

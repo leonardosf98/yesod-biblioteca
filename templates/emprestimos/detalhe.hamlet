@@ -5,11 +5,11 @@
 
 <dl .dl-horizontal>
     <dt>Emprestado em
-    <dd>#{show (emprestimoDataEmprestimo emprestimo)}
+    <dd>#{formatarData (emprestimoDataEmprestimo emprestimo)}
     <dt>Devolver até
-    <dd>#{show (emprestimoDataPrevista emprestimo)}
+    <dd>#{formatarData (emprestimoDataPrevista emprestimo)}
     <dt>Devolvido em
-    <dd>#{maybe "em aberto" show (emprestimoDataDevolucao emprestimo)}
+    <dd>#{maybe "em aberto" formatarData (emprestimoDataDevolucao emprestimo)}
     <dt>Multa
     <dd .multa>
         $if aberto

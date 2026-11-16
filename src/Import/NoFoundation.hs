@@ -4,6 +4,7 @@ module Import.NoFoundation
     ) where
 
 import ClassyPrelude.Yesod   as Import
+import Formato               as Import
 import Model                 as Import
 import Model.Tipos           as Import
 import Settings              as Import

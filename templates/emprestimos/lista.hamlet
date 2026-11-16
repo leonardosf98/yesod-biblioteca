@@ -24,11 +24,11 @@ $else
                     <td>
                         <a href=@{EmprestimoR emprestimoId}>#{descricaoExemplar contexto (emprestimoExemplarId emprestimo)}
                     <td>#{nomeSocio contexto (emprestimoSocioId emprestimo)}
-                    <td>#{show (emprestimoDataEmprestimo emprestimo)}
-                    <td>#{show (emprestimoDataPrevista emprestimo)}
+                    <td>#{formatarData (emprestimoDataEmprestimo emprestimo)}
+                    <td>#{formatarData (emprestimoDataPrevista emprestimo)}
                     <td>
                         $maybe devolucao <- emprestimoDataDevolucao emprestimo
-                            <span .label .label-default>Devolvido em #{show devolucao}
+                            <span .label .label-default>Devolvido em #{formatarData devolucao}
                         $nothing
                             $if atrasado emprestimo
                                 <span .label .label-danger>Atrasado

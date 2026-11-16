@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -104,7 +105,6 @@ instance Yesod App where
         master <- getYesod
         mensagens <- getMessages
 
-        muser <- maybeAuthPair
         mcurrentRoute <- getCurrentRoute
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
@@ -151,16 +151,6 @@ instance Yesod App where
                     { menuItemLabel = "Reservas"
                     , menuItemRoute = ReservasR
                     , menuItemAccessCallback = True
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Entrar"
-                    , menuItemRoute = AuthR LoginR
-                    , menuItemAccessCallback = isNothing muser
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Sair"
-                    , menuItemRoute = AuthR LogoutR
-                    , menuItemAccessCallback = isJust muser
                     }
                 ]
 
@@ -236,6 +226,22 @@ instance Yesod App where
     makeLogger :: App -> IO Logger
     makeLogger = return . appLogger
 
+    errorHandler :: ErrorResponse -> Handler TypedContent
+    errorHandler NotFound = paginaDeErro "Página não encontrada" "O endereço não existe ou o registro foi excluído."
+    errorHandler (InternalError _) = paginaDeErro "Algo deu errado" "Ocorreu um erro inesperado. Tente de novo; se continuar, avise a equipe."
+    errorHandler (PermissionDenied _) = paginaDeErro "Acesso negado" "A requisição foi recusada. Recarregue a página e tente de novo."
+    errorHandler outro = defaultErrorHandler outro
+
+paginaDeErro :: Html -> Html -> Handler TypedContent
+paginaDeErro titulo explicacao = selectRep $ provideRep $ defaultLayout $ do
+    setTitle titulo
+    [whamlet|
+<div .pagina-erro>
+    <h1>#{titulo}
+    <p .lead>#{explicacao}
+    <a .btn .btn-primary href=@{HomeR}>Voltar ao início
+|]
+
 -- Define breadcrumbs.
 instance YesodBreadcrumbs App where
     -- Takes the route that the user is currently on, and returns a tuple
@@ -249,37 +255,37 @@ instance YesodBreadcrumbs App where
     breadcrumb AutoresR = return ("Autores", Just HomeR)
     breadcrumb AutorNovoR = return ("Novo autor", Just AutoresR)
     breadcrumb (AutorR autorId) = do
-        autor <- runDB $ get404 autorId
-        return (autorNome autor, Just AutoresR)
+        nome <- maybe "Não encontrado" autorNome <$> runDB (get autorId)
+        return (nome, Just AutoresR)
     breadcrumb (AutorEditarR autorId) = return ("Editar", Just (AutorR autorId))
     breadcrumb EditorasR = return ("Editoras", Just HomeR)
     breadcrumb EditoraNovaR = return ("Nova editora", Just EditorasR)
     breadcrumb (EditoraR editoraId) = do
-        editora <- runDB $ get404 editoraId
-        return (editoraNome editora, Just EditorasR)
+        nome <- maybe "Não encontrado" editoraNome <$> runDB (get editoraId)
+        return (nome, Just EditorasR)
     breadcrumb (EditoraEditarR editoraId) = return ("Editar", Just (EditoraR editoraId))
     breadcrumb CategoriasR = return ("Categorias", Just HomeR)
     breadcrumb CategoriaNovaR = return ("Nova categoria", Just CategoriasR)
     breadcrumb (CategoriaR categoriaId) = do
-        categoria <- runDB $ get404 categoriaId
-        return (categoriaNome categoria, Just CategoriasR)
+        nome <- maybe "Não encontrado" categoriaNome <$> runDB (get categoriaId)
+        return (nome, Just CategoriasR)
     breadcrumb (CategoriaEditarR categoriaId) = return ("Editar", Just (CategoriaR categoriaId))
     breadcrumb LivrosR = return ("Livros", Just HomeR)
     breadcrumb LivroNovoR = return ("Novo livro", Just LivrosR)
     breadcrumb LivroImportarR = return ("Importar por ISBN", Just LivrosR)
     breadcrumb (LivroR livroId) = do
-        livro <- runDB $ get404 livroId
-        return (livroTitulo livro, Just LivrosR)
+        nome <- maybe "Não encontrado" livroTitulo <$> runDB (get livroId)
+        return (nome, Just LivrosR)
     breadcrumb (LivroEditarR livroId) = return ("Editar", Just (LivroR livroId))
     breadcrumb (ExemplarNovoR livroId) = return ("Novo exemplar", Just (LivroR livroId))
     breadcrumb (ExemplarEditarR exemplarId) = do
-        exemplar <- runDB $ get404 exemplarId
-        return ("Exemplar " <> exemplarCodigo exemplar, Just (LivroR (exemplarLivroId exemplar)))
+        exemplar <- runDB $ get exemplarId
+        return (maybe "Não encontrado" (("Exemplar " <>) . exemplarCodigo) exemplar, LivroR . exemplarLivroId <$> exemplar)
     breadcrumb SociosR = return ("Sócios", Just HomeR)
     breadcrumb SocioNovoR = return ("Novo sócio", Just SociosR)
     breadcrumb (SocioR socioId) = do
-        socio <- runDB $ get404 socioId
-        return (socioNome socio, Just SociosR)
+        nome <- maybe "Não encontrado" socioNome <$> runDB (get socioId)
+        return (nome, Just SociosR)
     breadcrumb (SocioEditarR socioId) = return ("Editar", Just (SocioR socioId))
     breadcrumb EmprestimosR = return ("Empréstimos", Just HomeR)
     breadcrumb EmprestimoNovoR = return ("Novo empréstimo", Just EmprestimosR)
