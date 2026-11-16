@@ -1,5 +1,7 @@
 <div .page-header>
-    <a .btn .btn-primary .pull-right href=@{LivroNovoR}>Novo livro
+    <div .pull-right>
+        <a .btn .btn-default href=@{LivroImportarR}>Importar por ISBN
+        <a .btn .btn-primary href=@{LivroNovoR}>Novo livro
     <h1>Livros
 
 <form .form-inline .filtros method=get action=@{LivrosR}>
