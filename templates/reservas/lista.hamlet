@@ -26,7 +26,7 @@ $else
                         <a href=@{LivroR (reservaLivroId reserva)}>#{tituloLivro (reservaLivroId reserva)}
                     <td>
                         <a href=@{SocioR (reservaSocioId reserva)}>#{nomeSocio (reservaSocioId reserva)}
-                    <td>#{show (reservaDataReserva reserva)}
+                    <td>#{formatarData (reservaDataReserva reserva)}
                     <td>#{show (reservaStatus reserva)}
                     <td>
                         $if reservaStatus reserva == Ativa

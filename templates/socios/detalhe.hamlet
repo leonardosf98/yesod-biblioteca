@@ -28,9 +28,9 @@ $else
                 <tr>
                     <td>#{tituloDoExemplar (emprestimoExemplarId emprestimo)}
                     <td>#{codigoDoExemplar (emprestimoExemplarId emprestimo)}
-                    <td>#{show (emprestimoDataEmprestimo emprestimo)}
-                    <td>#{show (emprestimoDataPrevista emprestimo)}
-                    <td>#{maybe "em aberto" show (emprestimoDataDevolucao emprestimo)}
+                    <td>#{formatarData (emprestimoDataEmprestimo emprestimo)}
+                    <td>#{formatarData (emprestimoDataPrevista emprestimo)}
+                    <td>#{maybe "em aberto" formatarData (emprestimoDataDevolucao emprestimo)}
 
 <h3>Reservas
 $if null reservas
@@ -38,7 +38,7 @@ $if null reservas
 $else
     <ul .reservas>
         $forall Entity _ reserva <- reservas
-            <li>#{tituloDoLivro (reservaLivroId reserva)} — #{show (reservaStatus reserva)} desde #{show (reservaDataReserva reserva)}
+            <li>#{tituloDoLivro (reservaLivroId reserva)} — #{show (reservaStatus reserva)} desde #{formatarData (reservaDataReserva reserva)}
 
 <div .acoes>
     <a .btn .btn-default href=@{SocioEditarR socioId}>Editar
