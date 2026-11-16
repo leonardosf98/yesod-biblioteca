@@ -23,7 +23,9 @@
         $maybe sinopse <- livroSinopse livro
             <p .sinopse>#{sinopse}
 
-<h3>Exemplares
+<h3>
+    Exemplares
+    <a .btn .btn-default .btn-sm href=@{ExemplarNovoR livroId}>Novo exemplar
 $if null exemplares
     <p .text-muted>Nenhum exemplar cadastrado.
 $else
@@ -33,8 +35,9 @@ $else
                 <th>Código
                 <th>Estado
                 <th>Situação
+                <th>
         <tbody>
-            $forall Entity _ exemplar <- exemplares
+            $forall Entity exemplarId exemplar <- exemplares
                 <tr>
                     <td>#{exemplarCodigo exemplar}
                     <td>#{show (exemplarEstado exemplar)}
@@ -43,6 +46,8 @@ $else
                             <span .label .label-success>Disponível
                         $else
                             <span .label .label-warning>Emprestado
+                    <td>
+                        <a href=@{ExemplarEditarR exemplarId}>Editar
 
 <div .acoes>
     <a .btn .btn-default href=@{LivroEditarR livroId}>Editar

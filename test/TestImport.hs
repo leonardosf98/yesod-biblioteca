@@ -13,6 +13,7 @@ import Database.Persist.Sql  (SqlPersistM, runSqlPersistMPool, rawExecute, rawSq
 import Database.Persist.SqlBackend (getEscapedRawName)
 import Foundation            as X
 import Model                 as X
+import Model.Tipos           as X
 import Test.Hspec            as X
 import Text.Shakespeare.Text (st)
 import Yesod.Default.Config2 (useEnv, loadYamlSettings)

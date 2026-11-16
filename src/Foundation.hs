@@ -256,6 +256,10 @@ instance YesodBreadcrumbs App where
         livro <- runDB $ get404 livroId
         return (livroTitulo livro, Just LivrosR)
     breadcrumb (LivroEditarR livroId) = return ("Editar", Just (LivroR livroId))
+    breadcrumb (ExemplarNovoR livroId) = return ("Novo exemplar", Just (LivroR livroId))
+    breadcrumb (ExemplarEditarR exemplarId) = do
+        exemplar <- runDB $ get404 exemplarId
+        return ("Exemplar " <> exemplarCodigo exemplar, Just (LivroR (exemplarLivroId exemplar)))
     breadcrumb  _ = return ("Início", Nothing)
 
 -- How to run database actions.

@@ -33,3 +33,9 @@
 /livros/#LivroId LivroR GET POST
 /livros/#LivroId/editar LivroEditarR GET
 /livros/#LivroId/excluir LivroExcluirR POST
+
+/livros/#LivroId/exemplares ExemplaresR POST
+/livros/#LivroId/exemplares/novo ExemplarNovoR GET
+/exemplares/#ExemplarId ExemplarR POST
+/exemplares/#ExemplarId/editar ExemplarEditarR GET
+/exemplares/#ExemplarId/excluir ExemplarExcluirR POST

@@ -31,7 +31,7 @@ paginaFormulario titulo acao formulario enctype = defaultLayout $ do
     setTitle (toHtml titulo)
     [whamlet|
 <h1>#{titulo}
-<form method=post action=@{acao} enctype=#{enctype}>
+<form .form-principal method=post action=@{acao} enctype=#{enctype}>
     ^{formulario}
     <button .btn .btn-primary type=submit>Salvar
 |]
