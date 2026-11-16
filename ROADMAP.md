@@ -94,9 +94,9 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 4a.7 Busca e filtro na listagem: título com `ILIKE` (filtro específico do Postgres via `BackendSpecificFilter`) e categoria
 
 ## Fase 5 — Exemplares
-- [ ] 5.1 CRUD de Exemplar dentro do livro (`/livros/#LivroId/exemplares`)
-- [ ] 5.2 Código único gerado ou informado, estado e disponibilidade
-- [ ] 5.3 Impedir a exclusão de um exemplar com empréstimo aberto
+- [x] 5.1 CRUD de Exemplar a partir da página do livro (`/livros/#LivroId/exemplares/novo`, `/exemplares/#ExemplarId/editar`)
+- [x] 5.2 Código único informado ou gerado (`L<livro>-<n>`), estado via `optionsEnum`; a disponibilidade não está no formulário porque quem muda é o empréstimo
+- [x] 5.3 Impedir a exclusão de exemplar com qualquer empréstimo registrado (o histórico depende dele); a saída é marcar como Perdido
 
 ## Fase 6 — Sócios + ViaCEP
 - [ ] 6.1 CRUD de Sócio com validação de e-mail, telefone e CEP (8 dígitos)
