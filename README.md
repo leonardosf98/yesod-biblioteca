@@ -12,6 +12,8 @@ stack build
 stack exec biblioteca
 ```
 
+Para popular o banco com dados de exemplo: `stack exec biblioteca-seed` (só insere se o banco estiver vazio).
+
 A aplicação sobe em http://localhost:3000. O Postgres do Docker escuta na porta 5433 do host; para usar outro banco, defina as variáveis do `.env.example`.
 
 Testes: `stack test` (usa o banco `biblioteca_test`, criado pelo container).
