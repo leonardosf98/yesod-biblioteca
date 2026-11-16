@@ -60,7 +60,7 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 - [x] 1.2 Tipos derivados para os enums `EstadoExemplar` e `StatusReserva` (`derivePersistField`, em `src/Model/Tipos.hs`)
 - [x] 1.3 Conferir a migração automática (`runMigration migrateAll`) e as FKs criadas no Postgres (`\d livro`)
 - [x] 1.4 Seed idempotente em `src/Seed.hs`, executável `stack exec biblioteca-seed`, com testes em `test/SeedSpec.hs`
-- [ ] 1.5 Desenhar o diagrama ER simples (opcional, ajuda na arguição)
+- [x] 1.5 Diagrama ER em Mermaid no README
 
 ## Fase 2 — Layout e navegação
 - [x] 2.1 `templates/default-layout.hamlet` com marca e menu; cada fase de CRUD acrescenta seu item (Livros, Autores, Editoras, Categorias, Sócios, Empréstimos, Reservas) em `Foundation.hs`, porque o link só compila quando a rota existe
@@ -133,12 +133,12 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [ ] 10.4 Rodar o seed no ambiente hospedado
 
 ## Fase 11 — README.md (curto, exigido pelo enunciado)
-- [ ] 11.1 Descrição: nome, objetivo e funcionalidades
-- [ ] 11.2 Tecnologias: Yesod, Persistent, PostgreSQL, Stack, Docker
-- [ ] 11.3 Como executar: dependências, `docker compose up -d`, `stack build`, `stack exec -- yesod devel`
-- [ ] 11.4 Estrutura do banco: as 9 tabelas em uma linha cada
-- [ ] 11.5 APIs: Open Library e ViaCEP, para que servem e onde são usadas
-- [ ] 11.6 Integrantes e principais contribuições
+- [x] 11.1 Descrição: nome, objetivo e funcionalidades
+- [x] 11.2 Tecnologias: Yesod, Persistent, PostgreSQL, Stack, Docker
+- [x] 11.3 Como executar: dependências, `docker compose up -d`, `stack build`, `stack exec -- yesod devel`
+- [x] 11.4 Estrutura do banco: as 9 tabelas em uma linha cada
+- [x] 11.5 APIs: Open Library e ViaCEP, para que servem e onde são usadas
+- [ ] 11.6 Integrantes e principais contribuições (tabela pronta no README; falta o grupo preencher)
 - [ ] 11.7 Link da aplicação hospedada (se houver)
 
 ## Fase 12 — Entrega e preparação para a arguição (8 pts)
