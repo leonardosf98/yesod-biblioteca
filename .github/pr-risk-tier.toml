@@ -10,7 +10,7 @@ paths = ["**/*.md"]
 [[rule]]
 id = "dados_e_contratos"
 tier = 2
-paths = ["config/models.persistentmodels", "config/routes.yesodroutes"]
+paths = ["config/models.persistentmodels", "config/routes.yesodroutes", "src/Integracao/**"]
 
 [[rule]]
 id = "seguranca_e_infra"

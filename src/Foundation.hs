@@ -251,6 +251,7 @@ instance YesodBreadcrumbs App where
     breadcrumb (CategoriaEditarR categoriaId) = return ("Editar", Just (CategoriaR categoriaId))
     breadcrumb LivrosR = return ("Livros", Just HomeR)
     breadcrumb LivroNovoR = return ("Novo livro", Just LivrosR)
+    breadcrumb LivroImportarR = return ("Importar por ISBN", Just LivrosR)
     breadcrumb (LivroR livroId) = do
         livro <- runDB $ get404 livroId
         return (livroTitulo livro, Just LivrosR)

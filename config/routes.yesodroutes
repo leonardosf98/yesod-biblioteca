@@ -29,6 +29,7 @@
 
 /livros LivrosR GET POST
 !/livros/novo LivroNovoR GET
+!/livros/importar LivroImportarR GET POST
 /livros/#LivroId LivroR GET POST
 /livros/#LivroId/editar LivroEditarR GET
 /livros/#LivroId/excluir LivroExcluirR POST
