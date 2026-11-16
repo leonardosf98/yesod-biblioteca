@@ -1,0 +1,27 @@
+<div .page-header>
+    <h1>#{descricaoExemplar contexto (emprestimoExemplarId emprestimo)}
+    <p .lead>
+        <a href=@{SocioR (emprestimoSocioId emprestimo)}>#{nomeSocio contexto (emprestimoSocioId emprestimo)}
+
+<dl .dl-horizontal>
+    <dt>Emprestado em
+    <dd>#{show (emprestimoDataEmprestimo emprestimo)}
+    <dt>Devolver até
+    <dd>#{show (emprestimoDataPrevista emprestimo)}
+    <dt>Devolvido em
+    <dd>#{maybe "em aberto" show (emprestimoDataDevolucao emprestimo)}
+    <dt>Multa
+    <dd .multa>
+        $if aberto
+            #{formatarCentavos multaPrevista} se devolvido hoje
+        $else
+            #{formatarCentavos (emprestimoMultaCentavos emprestimo)}
+
+$if aberto
+    <div .acoes>
+        <form .form-devolver method=post action=@{EmprestimoDevolverR emprestimoId}>
+            $maybe valor <- token
+                <input type=hidden name=#{defaultCsrfParamName} value=#{valor}>
+            <button .btn .btn-success type=submit>Registrar devolução
+        <a .btn .btn-default href=@{EmprestimoEditarR emprestimoId}>Prorrogar
+        ^{botaoExcluir (EmprestimoExcluirR emprestimoId)}

@@ -40,7 +40,8 @@ body {
 }
 
 .acoes .btn,
-.form-excluir {
+.form-excluir,
+.form-devolver {
     display: inline-block;
 }
 
