@@ -34,3 +34,12 @@ body {
     padding: 1.5em 0;
     border-top: 1px solid #e5e5e5;
 }
+
+.acoes {
+    margin-top: 2em;
+}
+
+.acoes .btn,
+.form-excluir {
+    display: inline-block;
+}

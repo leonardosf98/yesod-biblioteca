@@ -72,16 +72,17 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 ```
 /autores              AutoresR      GET POST
-/autores/novo         AutorNovoR    GET
+!/autores/novo        AutorNovoR    GET
 /autores/#AutorId     AutorR        GET POST
 /autores/#AutorId/editar  AutorEditarR GET
 /autores/#AutorId/excluir AutorExcluirR POST
 ```
-- [ ] 3.1 Autor: formulário `AForm` com validação (nome obrigatório, tamanho máximo), listagem, edição e exclusão
+- [x] 3.1 Autor: formulário `AForm` com validação (nome obrigatório, tamanho máximo), listagem, edição e exclusão
+- [x] 3.0 Proteção CSRF em todo POST (`defaultCsrfMiddleware`) e mensagens de validação em português (`portugueseFormMessage`)
 - [ ] 3.2 Editora: mesmo padrão
 - [ ] 3.3 Categoria: mesmo padrão, com tratamento do erro de nome duplicado (`insertUnique`)
 - [ ] 3.4 Bloquear a exclusão quando houver livros vinculados, com mensagem amigável
-- [ ] 3.5 Extrair um helper de layout/formulário em comum para não repetir código
+- [x] 3.5 Helpers comuns em `src/Form/Comum.hs`: `textoLimitado` (obrigatório, sem espaços nas pontas, tamanho máximo), `paginaFormulario`, `botaoExcluir` (POST com token CSRF) e `mensagem`
 
 ## Fase 4 — Livros + Open Library (2 PRs: 4a CRUD, 4b integração)
 - [ ] 4a.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)

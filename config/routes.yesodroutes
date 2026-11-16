@@ -9,4 +9,8 @@
 
 / HomeR GET
 
-
+/autores AutoresR GET POST
+!/autores/novo AutorNovoR GET
+/autores/#AutorId AutorR GET POST
+/autores/#AutorId/editar AutorEditarR GET
+/autores/#AutorId/excluir AutorExcluirR POST
