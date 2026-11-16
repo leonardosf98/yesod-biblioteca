@@ -142,6 +142,11 @@ instance Yesod App where
                     , menuItemRoute = SociosR
                     , menuItemAccessCallback = True
                     }
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Empréstimos"
+                    , menuItemRoute = EmprestimosR
+                    , menuItemAccessCallback = True
+                    }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Entrar"
                     , menuItemRoute = AuthR LoginR
@@ -271,6 +276,10 @@ instance YesodBreadcrumbs App where
         socio <- runDB $ get404 socioId
         return (socioNome socio, Just SociosR)
     breadcrumb (SocioEditarR socioId) = return ("Editar", Just (SocioR socioId))
+    breadcrumb EmprestimosR = return ("Empréstimos", Just HomeR)
+    breadcrumb EmprestimoNovoR = return ("Novo empréstimo", Just EmprestimosR)
+    breadcrumb (EmprestimoR emprestimoId) = return ("Empréstimo #" <> toPathPiece emprestimoId, Just EmprestimosR)
+    breadcrumb (EmprestimoEditarR emprestimoId) = return ("Prorrogar", Just (EmprestimoR emprestimoId))
     breadcrumb  _ = return ("Início", Nothing)
 
 -- How to run database actions.

@@ -1,0 +1,36 @@
+<div .page-header>
+    <a .btn .btn-primary .pull-right href=@{EmprestimoNovoR}>Novo empréstimo
+    <h1>Empréstimos
+
+<ul .nav .nav-pills .filtros>
+    $forall opcao <- situacoes
+        <li :opcao == situacao:.active>
+            <a href=@?{(EmprestimosR, [("situacao", tshow opcao)])}>#{rotuloSituacao opcao}
+
+$if null emprestimos
+    <p .text-muted>Nenhum empréstimo nesta situação.
+$else
+    <table .table .table-striped>
+        <thead>
+            <tr>
+                <th>Livro (exemplar)
+                <th>Sócio
+                <th>Emprestado em
+                <th>Devolver até
+                <th>Situação
+        <tbody>
+            $forall Entity emprestimoId emprestimo <- emprestimos
+                <tr>
+                    <td>
+                        <a href=@{EmprestimoR emprestimoId}>#{descricaoExemplar contexto (emprestimoExemplarId emprestimo)}
+                    <td>#{nomeSocio contexto (emprestimoSocioId emprestimo)}
+                    <td>#{show (emprestimoDataEmprestimo emprestimo)}
+                    <td>#{show (emprestimoDataPrevista emprestimo)}
+                    <td>
+                        $maybe devolucao <- emprestimoDataDevolucao emprestimo
+                            <span .label .label-default>Devolvido em #{show devolucao}
+                        $nothing
+                            $if atrasado emprestimo
+                                <span .label .label-danger>Atrasado
+                            $else
+                                <span .label .label-success>Em aberto

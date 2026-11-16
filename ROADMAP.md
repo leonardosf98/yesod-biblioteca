@@ -105,12 +105,12 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 6b.4 Tratar `{"erro": "true"}` (hoje o ViaCEP manda texto; o booleano também é aceito), 400 de formato inválido e falhas de rede
 - [x] 6a.5 Detalhe do sócio com o histórico de empréstimos e as reservas
 
-## Fase 7 — Empréstimos e reservas (2 PRs: 7a empréstimo, 7b reserva)
-- [ ] 7.1 Novo empréstimo: escolher o sócio e um exemplar disponível; `dataPrevista` = hoje + 14 dias
-- [ ] 7.2 Validar o limite de 3 empréstimos abertos por sócio e se o exemplar está disponível (tudo em `runDB`, na mesma transação)
-- [ ] 7.3 Devolução: grava `dataDevolucao`, calcula a multa (R$ 1,00/dia de atraso) e libera o exemplar
-- [ ] 7.4 Listagem com filtros: abertos, atrasados e devolvidos (consulta com `E.innerJoin` via Esqueleto ou `selectList` + joins manuais)
-- [ ] 7.5 Editar e excluir empréstimo (excluir só se ainda não foi devolvido, e nesse caso liberar o exemplar)
+## Fase 7 — Empréstimos e reservas (PRs: 7a regras, 7a telas, 7b reserva)
+- [x] 7.1 Novo empréstimo: escolher o sócio e um exemplar disponível; `dataPrevista` = hoje + 14 dias
+- [x] 7.2 Validar o limite de 3 empréstimos abertos por sócio, exemplar perdido e disponibilidade, tudo no mesmo `runDB`; a reserva do exemplar é um `updateWhereCount ... disponivel = true` atômico, então dois empréstimos simultâneos do mesmo exemplar não passam
+- [x] 7.3 Devolução: grava `dataDevolucao`, calcula a multa (R$ 1,00/dia de atraso) e libera o exemplar
+- [x] 7.4 Listagem com filtros: abertos, atrasados, devolvidos e todos (`selectList` + mapas para nomes de sócio e livro)
+- [x] 7.5 Prorrogar o prazo e excluir empréstimo aberto (lançado por engano), liberando o exemplar; devolvido é histórico e não sai
 - [ ] 7.6 Reserva: criar para um livro sem exemplar disponível; cancelar; marcar como atendida quando o empréstimo é criado
 - [ ] 7.7 Ao devolver, avisar se existe reserva ativa para aquele livro
 

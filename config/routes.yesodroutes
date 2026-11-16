@@ -45,3 +45,10 @@
 /socios/#SocioId SocioR GET POST
 /socios/#SocioId/editar SocioEditarR GET
 /socios/#SocioId/excluir SocioExcluirR POST
+
+/emprestimos EmprestimosR GET POST
+!/emprestimos/novo EmprestimoNovoR GET
+/emprestimos/#EmprestimoId EmprestimoR GET POST
+/emprestimos/#EmprestimoId/editar EmprestimoEditarR GET
+/emprestimos/#EmprestimoId/devolver EmprestimoDevolverR POST
+/emprestimos/#EmprestimoId/excluir EmprestimoExcluirR POST
