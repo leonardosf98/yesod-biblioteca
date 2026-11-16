@@ -1,0 +1,30 @@
+<div .page-header>
+    <a .btn .btn-primary .pull-right href=@{LivroNovoR}>Novo livro
+    <h1>Livros
+
+<form .form-inline .filtros method=get action=@{LivrosR}>
+    <input .form-control type=search name=busca placeholder="Buscar por título" value=#{fromMaybe "" busca}>
+    <select .form-control name=categoria>
+        <option value="">Todas as categorias
+        $forall Entity categoriaId categoria <- categorias
+            <option value=#{toPathPiece categoriaId} :Just categoriaId == categoriaFiltro:selected>#{categoriaNome categoria}
+    <button .btn .btn-default type=submit>Filtrar
+
+$if null livros
+    <p .text-muted>Nenhum livro encontrado.
+$else
+    <table .table .table-striped>
+        <thead>
+            <tr>
+                <th>Título
+                <th>Ano
+                <th>Categoria
+                <th>Editora
+        <tbody>
+            $forall Entity livroId livro <- livros
+                <tr>
+                    <td>
+                        <a href=@{LivroR livroId}>#{livroTitulo livro}
+                    <td>#{maybe "—" tshow (livroAno livro)}
+                    <td>#{fromMaybe "—" (lookup (livroCategoriaId livro) nomeCategoria)}
+                    <td>#{fromMaybe "—" (livroEditoraId livro >>= flip lookup nomeEditora)}

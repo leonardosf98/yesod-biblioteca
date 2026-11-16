@@ -29,7 +29,7 @@ Projeto final da disciplina: aplicação web em Yesod com 7+ tabelas, CRUD, uma 
 
 Todas as FKs são `ON DELETE RESTRICT`, menos `LivroAutor → Livro` (`CASCADE`): o próprio banco impede apagar o que ainda é referenciado.
 
-Regras de negócio: exemplar emprestado fica indisponível; não dá para excluir um livro que tem exemplares emprestados; a multa é calculada por dia de atraso; um sócio só pode ter até 3 empréstimos abertos.
+Regras de negócio: exemplar emprestado fica indisponível; não dá para excluir um livro que tem exemplares ou reservas (o histórico de empréstimos depende deles); a multa é calculada por dia de atraso; um sócio só pode ter até 3 empréstimos abertos.
 
 ## Divisão sugerida (até 4 integrantes, mínimo de 3 commits relevantes cada)
 
@@ -85,13 +85,13 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 3.5 Helpers comuns em `src/Form/Comum.hs`: `textoLimitado` (obrigatório, sem espaços nas pontas, tamanho máximo), `paginaFormulario`, `botaoExcluir` (POST com token CSRF) e `mensagem`
 
 ## Fase 4 — Livros + Open Library (2 PRs: 4a CRUD, 4b integração)
-- [ ] 4a.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)
-- [ ] 4a.2 Multiselect de autores, gravando em `LivroAutor` (no update, apagar e reinserir na mesma transação)
-- [ ] 4a.3 Página de detalhe: autores, exemplares, disponibilidade e capa
+- [x] 4a.1 CRUD de Livro com selects de Editora e Categoria (`selectField` + `optionsPersistKey`)
+- [x] 4a.2 Multiselect de autores, gravando em `LivroAutor` (no update, apagar e reinserir na mesma transação)
+- [x] 4a.3 Página de detalhe: autores, exemplares, disponibilidade e capa
 - [ ] 4b.4 Módulo `Integracao/OpenLibrary.hs`: `GET https://openlibrary.org/api/books?bibkeys=ISBN:<isbn>&format=json&jscmd=data` com `http-conduit` + `aeson`; incluir `src/Integracao/**` na regra de tier 2 do `.github/pr-risk-tier.toml`
 - [ ] 4b.5 Botão "Buscar por ISBN" que preenche título, ano, sinopse e capa, cria a editora e os autores que ainda não existem e salva tudo
 - [ ] 4b.6 Tratar ISBN inexistente, timeout e JSON inesperado (`Either`/`Maybe`), mostrando a mensagem ao usuário sem derrubar a página
-- [ ] 4.7 Busca e filtro na listagem (por título e por categoria)
+- [x] 4a.7 Busca e filtro na listagem: título com `ILIKE` (filtro específico do Postgres via `BackendSpecificFilter`) e categoria
 
 ## Fase 5 — Exemplares
 - [ ] 5.1 CRUD de Exemplar dentro do livro (`/livros/#LivroId/exemplares`)

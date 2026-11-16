@@ -43,3 +43,15 @@ body {
 .form-excluir {
     display: inline-block;
 }
+
+.filtros {
+    margin-bottom: 1.5em;
+}
+
+.autor + .autor:before {
+    content: ", ";
+}
+
+.capa {
+    margin-top: 20px;
+}
