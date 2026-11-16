@@ -105,7 +105,6 @@ instance Yesod App where
         master <- getYesod
         mensagens <- getMessages
 
-        muser <- maybeAuthPair
         mcurrentRoute <- getCurrentRoute
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
@@ -152,16 +151,6 @@ instance Yesod App where
                     { menuItemLabel = "Reservas"
                     , menuItemRoute = ReservasR
                     , menuItemAccessCallback = True
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Entrar"
-                    , menuItemRoute = AuthR LoginR
-                    , menuItemAccessCallback = isNothing muser
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Sair"
-                    , menuItemRoute = AuthR LogoutR
-                    , menuItemAccessCallback = isJust muser
                     }
                 ]
 
