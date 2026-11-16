@@ -101,7 +101,7 @@ instance Yesod App where
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
         master <- getYesod
-        mmsg <- getMessage
+        mensagens <- getMessages
 
         muser <- maybeAuthPair
         mcurrentRoute <- getCurrentRoute

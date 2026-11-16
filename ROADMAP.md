@@ -63,10 +63,10 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 - [ ] 1.5 Desenhar o diagrama ER simples (opcional, ajuda na arguição)
 
 ## Fase 2 — Layout e navegação
-- [ ] 2.1 `templates/default-layout.hamlet` com menu: Livros, Autores, Editoras, Categorias, Exemplares, Sócios, Empréstimos, Reservas
-- [ ] 2.2 Estilo base em `default-layout.lucius` (ou Bootstrap, que já vem no scaffold)
-- [ ] 2.3 Exibir mensagens de sucesso e erro via `setMessage`/`getMessage`
-- [ ] 2.4 Página inicial (`HomeR`) com contadores: livros, exemplares disponíveis, empréstimos atrasados
+- [x] 2.1 `templates/default-layout.hamlet` com marca e menu; cada fase de CRUD acrescenta seu item (Livros, Autores, Editoras, Categorias, Sócios, Empréstimos, Reservas) em `Foundation.hs`, porque o link só compila quando a rota existe
+- [x] 2.2 Estilo base em `default-layout.lucius` (ou Bootstrap, que já vem no scaffold)
+- [x] 2.3 Mensagens com status via `addMessage "success"|"danger"|"warning"` e `getMessages` (vira `alert-<status>` do Bootstrap)
+- [x] 2.4 Página inicial (`HomeR`) com contadores: livros, exemplares disponíveis, empréstimos atrasados
 
 ## Fase 3 — CRUDs simples (Autor, Editora, Categoria — 1 PR por entidade)
 Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
