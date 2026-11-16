@@ -100,9 +100,9 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 
 ## Fase 6 — Sócios + ViaCEP (2 PRs: 6a CRUD, 6b integração)
 - [x] 6a.1 CRUD de Sócio com validação de e-mail, telefone e CEP (8 dígitos)
-- [ ] 6b.2 Módulo `Integracao/ViaCep.hs`: `GET https://viacep.com.br/ws/<cep>/json/`
-- [ ] 6b.3 Ao salvar (ou num botão "Buscar CEP"), preencher logradouro, bairro, cidade e UF e persistir
-- [ ] 6b.4 Tratar `{"erro": true}` (CEP inexistente) e falhas de rede
+- [x] 6b.2 Módulo `Integracao/ViaCep.hs`: `GET https://viacep.com.br/ws/<cep>/json/`
+- [x] 6b.3 Ao salvar, preencher logradouro, bairro, cidade e UF e persistir; se o CEP não mudou na edição, mantém o endereço sem chamar a API
+- [x] 6b.4 Tratar `{"erro": "true"}` (hoje o ViaCEP manda texto; o booleano também é aceito), 400 de formato inválido e falhas de rede
 - [x] 6a.5 Detalhe do sócio com o histórico de empréstimos e as reservas
 
 ## Fase 7 — Empréstimos e reservas (2 PRs: 7a empréstimo, 7b reserva)
