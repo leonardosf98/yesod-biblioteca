@@ -19,6 +19,7 @@ import Control.Monad.Logger (LogSource)
 
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
+import Yesod.Form.I18n.Portuguese (portugueseFormMessage)
 
 import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
 import Yesod.Default.Util   (addStaticContentExternal)
@@ -96,7 +97,7 @@ instance Yesod App where
     -- To add it, chain it together with the defaultMiddleware: yesodMiddleware = defaultYesodMiddleware . defaultCsrfMiddleware
     -- For details, see the CSRF documentation in the Yesod.Core.Handler module of the yesod-core package.
     yesodMiddleware :: ToTypedContent res => Handler res -> Handler res
-    yesodMiddleware = defaultYesodMiddleware
+    yesodMiddleware = defaultYesodMiddleware . defaultCsrfMiddleware
 
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
@@ -114,6 +115,11 @@ instance Yesod App where
                 [ NavbarLeft $ MenuItem
                     { menuItemLabel = "Início"
                     , menuItemRoute = HomeR
+                    , menuItemAccessCallback = True
+                    }
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Autores"
+                    , menuItemRoute = AutoresR
                     , menuItemAccessCallback = True
                     }
                 , NavbarRight $ MenuItem
@@ -162,6 +168,7 @@ instance Yesod App where
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
+    isAuthorized _ _ = return Authorized
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -209,6 +216,12 @@ instance YesodBreadcrumbs App where
         -> Handler (Text, Maybe (Route App))
     breadcrumb HomeR = return ("Início", Nothing)
     breadcrumb (AuthR _) = return ("Entrar", Just HomeR)
+    breadcrumb AutoresR = return ("Autores", Just HomeR)
+    breadcrumb AutorNovoR = return ("Novo autor", Just AutoresR)
+    breadcrumb (AutorR autorId) = do
+        autor <- runDB $ get404 autorId
+        return (autorNome autor, Just AutoresR)
+    breadcrumb (AutorEditarR autorId) = return ("Editar", Just (AutorR autorId))
     breadcrumb  _ = return ("Início", Nothing)
 
 -- How to run database actions.
@@ -267,7 +280,7 @@ instance YesodAuthPersist App
 -- achieve customized and internationalized form validation messages.
 instance RenderMessage App FormMessage where
     renderMessage :: App -> [Lang] -> FormMessage -> Text
-    renderMessage _ _ = defaultFormMessage
+    renderMessage _ _ = portugueseFormMessage
 
 -- Useful when writing code that is re-usable outside of the Handler context.
 -- An example is background jobs that send email.
