@@ -20,3 +20,9 @@
 /editoras/#EditoraId EditoraR GET POST
 /editoras/#EditoraId/editar EditoraEditarR GET
 /editoras/#EditoraId/excluir EditoraExcluirR POST
+
+/categorias CategoriasR GET POST
+!/categorias/nova CategoriaNovaR GET
+/categorias/#CategoriaId CategoriaR GET POST
+/categorias/#CategoriaId/editar CategoriaEditarR GET
+/categorias/#CategoriaId/excluir CategoriaExcluirR POST
