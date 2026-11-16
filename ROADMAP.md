@@ -98,12 +98,12 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 5.2 Código único informado ou gerado (`L<livro>-<n>`), estado via `optionsEnum`; a disponibilidade não está no formulário porque quem muda é o empréstimo
 - [x] 5.3 Impedir a exclusão de exemplar com qualquer empréstimo registrado (o histórico depende dele); a saída é marcar como Perdido
 
-## Fase 6 — Sócios + ViaCEP
-- [ ] 6.1 CRUD de Sócio com validação de e-mail, telefone e CEP (8 dígitos)
-- [ ] 6.2 Módulo `Integracao/ViaCep.hs`: `GET https://viacep.com.br/ws/<cep>/json/`
-- [ ] 6.3 Ao salvar (ou num botão "Buscar CEP"), preencher logradouro, bairro, cidade e UF e persistir
-- [ ] 6.4 Tratar `{"erro": true}` (CEP inexistente) e falhas de rede
-- [ ] 6.5 Detalhe do sócio com o histórico de empréstimos e as reservas
+## Fase 6 — Sócios + ViaCEP (2 PRs: 6a CRUD, 6b integração)
+- [x] 6a.1 CRUD de Sócio com validação de e-mail, telefone e CEP (8 dígitos)
+- [ ] 6b.2 Módulo `Integracao/ViaCep.hs`: `GET https://viacep.com.br/ws/<cep>/json/`
+- [ ] 6b.3 Ao salvar (ou num botão "Buscar CEP"), preencher logradouro, bairro, cidade e UF e persistir
+- [ ] 6b.4 Tratar `{"erro": true}` (CEP inexistente) e falhas de rede
+- [x] 6a.5 Detalhe do sócio com o histórico de empréstimos e as reservas
 
 ## Fase 7 — Empréstimos e reservas (2 PRs: 7a empréstimo, 7b reserva)
 - [ ] 7.1 Novo empréstimo: escolher o sócio e um exemplar disponível; `dataPrevista` = hoje + 14 dias
