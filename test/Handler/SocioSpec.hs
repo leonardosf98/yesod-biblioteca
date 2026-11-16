@@ -6,14 +6,17 @@ import Seed (popular)
 import TestImport
 
 enviarSocio :: Route App -> Text -> Text -> Text -> YesodExample App ()
-enviarSocio rota nome email telefone = request $ do
+enviarSocio rota nome email telefone = enviarSocioComCep rota nome email telefone ""
+
+enviarSocioComCep :: Route App -> Text -> Text -> Text -> Text -> YesodExample App ()
+enviarSocioComCep rota nome email telefone cep = request $ do
     setMethod "POST"
     setUrl rota
     addToken_ ".form-principal"
     byLabelExact "Nome" nome
     byLabelExact "E-mail" email
     byLabelExact "Telefone" telefone
-    byLabelExact "CEP" ""
+    byLabelExact "CEP" cep
     byLabelExact "Número" ""
 
 socioPorEmail :: Text -> YesodExample App (Entity Socio)
@@ -51,6 +54,16 @@ spec = withApp $ do
             statusIs 303
             socio <- runDB $ getJust socioId
             assertEq "nome novo" "Ana Paula" (socioNome socio)
+
+        it "mantém o endereço sem consultar o ViaCEP quando o CEP não muda" $ do
+            socioId <- runDB $ insert $ Socio "Ana" "ana@example.com" Nothing (Just "01001000")
+                (Just "Praça da Sé") (Just "100") (Just "Sé") (Just "São Paulo") (Just "SP")
+            get (SocioEditarR socioId)
+            enviarSocioComCep (SocioR socioId) "Ana Paula" "ana@example.com" "" "01001-000"
+            statusIs 303
+            socio <- runDB $ getJust socioId
+            assertEq "logradouro mantido" (Just "Praça da Sé") (socioLogradouro socio)
+            assertEq "cidade mantida" (Just "São Paulo") (socioCidade socio)
 
         it "mostra histórico de empréstimos e reservas" $ do
             runDB popular

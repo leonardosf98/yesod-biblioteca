@@ -8,6 +8,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Form.Comum
 import Import
+import Integracao.ViaCep
 
 data DadosSocio = DadosSocio
     { dadosNome :: Text
@@ -47,6 +48,29 @@ paraSocio dados = Socio
     , socioUf = Nothing
     }
 
+resolverEndereco :: Maybe Socio -> DadosSocio -> Handler (Either Text Socio)
+resolverEndereco anterior dados = case dadosCep dados of
+    Nothing -> return (Right base)
+    Just cep
+        | Just cep == (anterior >>= socioCep) -> return (Right (manterEndereco anterior))
+        | otherwise -> do
+            manager <- getsYesod appHttpManager
+            fmap comEndereco <$> liftIO (buscarCep manager cep)
+  where
+    base = paraSocio dados
+    manterEndereco socio = base
+        { socioLogradouro = socio >>= socioLogradouro
+        , socioBairro = socio >>= socioBairro
+        , socioCidade = socio >>= socioCidade
+        , socioUf = socio >>= socioUf
+        }
+    comEndereco endereco = base
+        { socioLogradouro = enderecoLogradouro endereco
+        , socioBairro = enderecoBairro endereco
+        , socioCidade = Just (enderecoCidade endereco)
+        , socioUf = Just (enderecoUf endereco)
+        }
+
 emailEmUso :: Text -> Maybe SocioId -> Handler Bool
 emailEmUso email proprio = do
     existente <- runDB $ getBy (UniqueSocioEmail email)
@@ -79,9 +103,13 @@ postSociosR = do
             if repetido
                 then mensagem "danger" emailRepetido >> reexibir
                 else do
-                    socioId <- runDB $ insert (paraSocio dados)
-                    mensagem "success" "Sócio cadastrado."
-                    redirect (SocioR socioId)
+                    resolvido <- resolverEndereco Nothing dados
+                    case resolvido of
+                        Left erro -> mensagem "danger" erro >> reexibir
+                        Right socio -> do
+                            socioId <- runDB $ insert socio
+                            mensagem "success" "Sócio cadastrado."
+                            redirect (SocioR socioId)
         _ -> reexibir
 
 getSocioR :: SocioId -> Handler Html
@@ -113,7 +141,7 @@ getSocioEditarR socioId = do
 
 postSocioR :: SocioId -> Handler Html
 postSocioR socioId = do
-    _ <- runDB $ get404 socioId
+    anterior <- runDB $ get404 socioId
     ((resultado, formulario), enctype) <- runFormPost (socioForm Nothing)
     let reexibir = paginaFormulario "Editar sócio" (SocioR socioId) formulario enctype
     case resultado of
@@ -122,9 +150,13 @@ postSocioR socioId = do
             if repetido
                 then mensagem "danger" emailRepetido >> reexibir
                 else do
-                    runDB $ replace socioId (paraSocio dados)
-                    mensagem "success" "Sócio atualizado."
-                    redirect (SocioR socioId)
+                    resolvido <- resolverEndereco (Just anterior) dados
+                    case resolvido of
+                        Left erro -> mensagem "danger" erro >> reexibir
+                        Right socio -> do
+                            runDB $ replace socioId socio
+                            mensagem "success" "Sócio atualizado."
+                            redirect (SocioR socioId)
         _ -> reexibir
 
 postSocioExcluirR :: SocioId -> Handler Html
