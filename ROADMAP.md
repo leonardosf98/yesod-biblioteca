@@ -80,8 +80,8 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 3.1 Autor: formulário `AForm` com validação (nome obrigatório, tamanho máximo), listagem, edição e exclusão
 - [x] 3.0 Proteção CSRF em todo POST (`defaultCsrfMiddleware`) e mensagens de validação em português (`portugueseFormMessage`)
 - [x] 3.2 Editora: mesmo padrão, com nome único (`insertUnique` no cadastro; na edição, `getBy` na chave única e recusa se for outro registro)
-- [ ] 3.3 Categoria: mesmo padrão, com tratamento do erro de nome duplicado (`insertUnique`)
-- [ ] 3.4 Bloquear a exclusão quando houver livros vinculados, com mensagem amigável
+- [x] 3.3 Categoria: mesmo padrão, com tratamento do erro de nome duplicado (`insertUnique`)
+- [x] 3.4 Bloquear a exclusão quando houver livros vinculados, com mensagem amigável
 - [x] 3.5 Helpers comuns em `src/Form/Comum.hs`: `textoLimitado` (obrigatório, sem espaços nas pontas, tamanho máximo), `paginaFormulario`, `botaoExcluir` (POST com token CSRF) e `mensagem`
 
 ## Fase 4 — Livros + Open Library (2 PRs: 4a CRUD, 4b integração)

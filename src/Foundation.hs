@@ -127,6 +127,11 @@ instance Yesod App where
                     , menuItemRoute = EditorasR
                     , menuItemAccessCallback = True
                     }
+                , NavbarLeft $ MenuItem
+                    { menuItemLabel = "Categorias"
+                    , menuItemRoute = CategoriasR
+                    , menuItemAccessCallback = True
+                    }
                 , NavbarRight $ MenuItem
                     { menuItemLabel = "Entrar"
                     , menuItemRoute = AuthR LoginR
@@ -233,6 +238,12 @@ instance YesodBreadcrumbs App where
         editora <- runDB $ get404 editoraId
         return (editoraNome editora, Just EditorasR)
     breadcrumb (EditoraEditarR editoraId) = return ("Editar", Just (EditoraR editoraId))
+    breadcrumb CategoriasR = return ("Categorias", Just HomeR)
+    breadcrumb CategoriaNovaR = return ("Nova categoria", Just CategoriasR)
+    breadcrumb (CategoriaR categoriaId) = do
+        categoria <- runDB $ get404 categoriaId
+        return (categoriaNome categoria, Just CategoriasR)
+    breadcrumb (CategoriaEditarR categoriaId) = return ("Editar", Just (CategoriaR categoriaId))
     breadcrumb  _ = return ("Início", Nothing)
 
 -- How to run database actions.
