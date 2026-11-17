@@ -21,7 +21,7 @@ import Regras.Reserva (cancelarReserva, criarReserva, filaDeReservas)
 
 socioAtual :: Handler SocioId
 socioAtual = do
-    Entity _ usuario <- requireAuth
+    Entity _ usuario <- exigirUsuario
     maybe (permissionDenied "Conta sem sócio vinculado.") return (userSocioId usuario)
 
 recusar :: Status -> Text -> Handler a

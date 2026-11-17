@@ -1,67 +1,12 @@
--- By default this file is used by `parseRoutesFile` in Foundation.hs
--- Syntax for this file here: https://www.yesodweb.com/book/routing-and-handlers
-
-/static StaticR Static appStatic
-/auth   AuthR   Auth   getAuth
-
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
 / HomeR GET
 
-/autores AutoresR GET POST
-!/autores/novo AutorNovoR GET
-/autores/#AutorId AutorR GET POST
-/autores/#AutorId/editar AutorEditarR GET
-/autores/#AutorId/excluir AutorExcluirR POST
-
-/editoras EditorasR GET POST
-!/editoras/nova EditoraNovaR GET
-/editoras/#EditoraId EditoraR GET POST
-/editoras/#EditoraId/editar EditoraEditarR GET
-/editoras/#EditoraId/excluir EditoraExcluirR POST
-
-/categorias CategoriasR GET POST
-!/categorias/nova CategoriaNovaR GET
-/categorias/#CategoriaId CategoriaR GET POST
-/categorias/#CategoriaId/editar CategoriaEditarR GET
-/categorias/#CategoriaId/excluir CategoriaExcluirR POST
-
-/livros LivrosR GET POST
-!/livros/novo LivroNovoR GET
-!/livros/importar LivroImportarR GET POST
-/livros/#LivroId LivroR GET POST
-/livros/#LivroId/editar LivroEditarR GET
-/livros/#LivroId/excluir LivroExcluirR POST
-
-/livros/#LivroId/exemplares ExemplaresR POST
-/livros/#LivroId/exemplares/novo ExemplarNovoR GET
-/exemplares/#ExemplarId ExemplarR POST
-/exemplares/#ExemplarId/editar ExemplarEditarR GET
-/exemplares/#ExemplarId/excluir ExemplarExcluirR POST
-
-/socios SociosR GET POST
-!/socios/novo SocioNovoR GET
-/socios/#SocioId SocioR GET POST
-/socios/#SocioId/editar SocioEditarR GET
-/socios/#SocioId/excluir SocioExcluirR POST
-
-/emprestimos EmprestimosR GET POST
-!/emprestimos/novo EmprestimoNovoR GET
-/emprestimos/#EmprestimoId EmprestimoR GET POST
-/emprestimos/#EmprestimoId/editar EmprestimoEditarR GET
-/emprestimos/#EmprestimoId/devolver EmprestimoDevolverR POST
-/emprestimos/#EmprestimoId/excluir EmprestimoExcluirR POST
-
-/reservas ReservasR GET POST
-!/reservas/nova ReservaNovaR GET
-/reservas/#ReservaId/cancelar ReservaCancelarR POST
-
 /api/sessoes ApiSessoesR POST DELETE
 /api/eu ApiEuR GET
 /api/ativacao ApiAtivacaoR POST
 /api/socios/#SocioId/codigo-ativacao ApiSocioCodigoR POST
-/socios/#SocioId/codigo-ativacao SocioCodigoR POST
 /api/livros ApiLivrosR GET POST
 /api/livros/#LivroId ApiLivroR GET PUT DELETE
 /api/livros/#LivroId/pedidos ApiLivroPedidosR POST
@@ -71,7 +16,6 @@
 /api/eu/emprestimos/#EmprestimoId/renovacao ApiEuRenovacaoR POST
 /api/livros/#LivroId/reservas ApiLivroReservasR POST
 /api/emprestimos/#EmprestimoId/pagamento-multa ApiPagamentoMultaR POST
-/emprestimos/#EmprestimoId/pagamento EmprestimoPagamentoR POST
 /api/painel ApiPainelR GET
 /api/balcao/exemplares/#Text ApiExemplarCodigoR GET
 /api/emprestimos ApiEmprestimosR POST

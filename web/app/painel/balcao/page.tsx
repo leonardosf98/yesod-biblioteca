@@ -35,7 +35,7 @@ export default async function Balcao({ searchParams }: Props) {
         {ok === "devolucao" && devolucao && (
           <Aviso>
             Devolução de <strong>{devolucao.livro.titulo}</strong> registrada.{" "}
-            {Number(multa) > 0 ? <>Multa de <strong>{reais(Number(multa))}</strong>: cobre agora ou registre o pagamento depois na página do empréstimo.</> : "Sem multa."}
+            {Number(multa) > 0 ? <>Multa de <strong>{reais(Number(multa))}</strong>: cobre agora e registre o pagamento na página do sócio.</> : "Sem multa."}
           </Aviso>
         )}
         <section aria-labelledby="emp-t" className="flex min-w-0 flex-[3_1_440px] flex-col gap-5 rounded-2xl border border-borda bg-superficie p-6">

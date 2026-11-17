@@ -246,21 +246,6 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
             pedir (token c) (livro c)
             statusIs 201
 
-        it "balcão registra o pagamento pela página do empréstimo" $ do
-            c <- cenario
-            dia <- hoje
-            e <- runDB $ insert $ Emprestimo (exemplar c) (socio c) (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 200 0 Nothing
-            entrar
-            get (EmprestimoR e)
-            htmlAnyContain ".form-pagamento button" "Registrar pagamento"
-            request $ do
-                setMethod "POST"
-                setUrl (EmprestimoPagamentoR e)
-                addToken_ ".form-pagamento"
-            statusIs 303
-            paga <- runDB $ emprestimoMultaPagaEm <$> getJust e
-            assertEq "paga hoje" (Just dia) paga
-
         it "sócio sai da fila; não cancela a de outro; bibliotecário cancela qualquer uma" $ do
             c <- cenario
             (outro, t2) <- novoSocio "bia@example.com"

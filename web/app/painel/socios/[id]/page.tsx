@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { atualizarSocio, cancelarReserva, excluirSocio, gerarCodigo } from "@/app/painel/socios/acoes";
+import { atualizarSocio, cancelarReserva, excluirSocio, gerarCodigo, registrarPagamento } from "@/app/painel/socios/acoes";
 import { BotaoAcao } from "@/components/botao-acao";
 import { CamposSocio } from "@/components/campos-socio";
 import { Formulario } from "@/components/formulario";
@@ -46,7 +46,14 @@ export default async function PaginaSocio({ params }: { params: Promise<{ id: st
                         <td className="px-5 py-3">{dataCurta(e.dataEmprestimo)}</td>
                         <td className="px-5 py-3">{dataCurta(e.dataPrevista)}</td>
                         <td className="px-5 py-3">{e.dataDevolucao ? dataCurta(e.dataDevolucao) : "em aberto"}</td>
-                        <td className="px-5 py-3">{e.multaCentavos ? `${reais(e.multaCentavos)}${e.multaPaga ? " · paga" : ""}` : "—"}</td>
+                        <td className="px-5 py-3">
+                          {e.multaCentavos === 0 ? "—" : e.multaPaga ? `${reais(e.multaCentavos)} · paga` : (
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium text-perigo">{reais(e.multaCentavos)}</span>
+                              <BotaoAcao acao={registrarPagamento.bind(null, e.id)} rotulo="Registrar pagamento" pendente="Registrando…" variante="contorno" />
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -167,4 +167,4 @@ Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend
 - [ ] 13.7 Área do sócio
 - [x] 13.8 Painel do bibliotecário: painel, balcão, pedidos, sócios e acervo
 - [ ] 13.9 Deploy: API no Lightsail, Next.js na Vercel, banco no Supabase
-- [ ] 13.10 Remover as páginas Hamlet e atualizar o README para a Opção B
+- [x] 13.10 Remover as páginas Hamlet e atualizar o README para a Opção B

@@ -1,67 +1,74 @@
 # Biblioteca Comunitária
 
-Aplicação web em **Yesod (Haskell)** para gerenciar uma biblioteca comunitária: acervo, exemplares, sócios, empréstimos com multa por atraso e reservas. Arquitetura monolítica (Opção A do enunciado), com páginas em Shakespearean Templates (Hamlet e Lucius).
+Sistema de uma biblioteca comunitária com **backend em Yesod (Haskell)** e frontend em Next.js: acervo, exemplares, sócios, empréstimos com multa por atraso, pedidos pelo app com retirada no balcão e fila de reservas. Segue a **Opção B** do enunciado: o Yesod expõe uma API REST em JSON e o frontend fica separado, em `web/`.
+
+A versão monolítica com Hamlet, entregue primeiro, continua disponível na tag [`v1.0.0`](../../tree/v1.0.0).
+
+```
+Navegador ──> Next.js (BFF) ──Bearer──> API Yesod ──> PostgreSQL
+                │                          ├─ Open Library (ISBN)
+                └─ cookie httpOnly         └─ ViaCEP (endereço)
+```
+
+O navegador só fala com o Next.js; o Next.js chama a API pelo servidor e guarda o token num cookie `httpOnly`. A API não usa cookie nem sessão: cada requisição traz `Authorization: Bearer <token>`.
 
 ## Funcionalidades
 
-- CRUD de livros, autores, editoras, categorias, exemplares, sócios, empréstimos e reservas pela interface web.
-- **Importação de livro por ISBN** pela Open Library: título, autores, editora, ano, capa e trecho são gravados; editora e autores existentes são reaproveitados.
-- **Endereço do sócio pelo CEP** via ViaCEP, gravado no cadastro.
-- Empréstimo com prazo de 14 dias, limite de 3 abertos por sócio, multa de R$ 1,00 por dia de atraso e bloqueio de exemplar perdido ou já emprestado.
-- Reservas para livros sem exemplar disponível, atendidas automaticamente no empréstimo, com aviso da fila na devolução.
-- Busca de livros por título e categoria; filtros de empréstimos (abertos, atrasados, devolvidos).
-- Login de bibliotecário com senha em hash (`yesod-auth-hashdb`); catálogo público e o resto restrito por papel.
-- Validação de formulários com mensagens em português, proteção CSRF em todo POST e páginas de erro próprias.
+**Sócio** (área pública e "Meus empréstimos"):
+- catálogo com capas, busca por título, autor ou ISBN e filtro por categoria;
+- pedido de empréstimo pelo app, com código de retirada válido por 48 h, e entrada na fila quando não há exemplar livre;
+- renovação única de 7 dias, cancelamento de pedido, saída da fila e histórico com multas;
+- ativação da conta com o código entregue no balcão (sem cadastro aberto).
+
+**Bibliotecário** (`/painel`):
+- números do dia, pedidos para separar, atrasados com multa prevista e devoluções do dia;
+- balcão com empréstimo em 3 passos e devolução rápida pelo código do exemplar;
+- cadastro de sócios (endereço pelo **ViaCEP**), código de ativação e registro de pagamento de multa;
+- acervo: livros, exemplares, autores, editoras, categorias e **importação por ISBN** pela Open Library.
+
+**Regras** (na API, com testes): limite de 3 livros por sócio (empréstimos e pedidos), multa de R$ 1,00 por dia, multa não paga ou atraso bloqueiam pedidos e renovações, fila de reservas respeitada, pedido não retirado expira em 48 h, exemplar perdido fora da disponibilidade.
 
 ## Tecnologias
 
 | Camada | Ferramenta |
 |---|---|
-| Linguagem e framework | Haskell (GHC 9.10.3), Yesod 1.6 |
-| Templates | Hamlet (HTML), Lucius (CSS), Bootstrap 3 |
+| Backend | Haskell (GHC 9.10.3), Yesod 1.6, API JSON |
 | Banco | PostgreSQL 16, via Persistent (`persistent-postgresql`) |
-| HTTP para as APIs | `http-conduit` + `aeson` |
-| Build | Stack (snapshot lts-24.67, com warp 3.4.17 por segurança) |
+| Autenticação | senhas com hash (`yesod-auth-hashdb`), token opaco por sessão, só o hash SHA-256 no banco |
+| HTTP para as APIs externas | `http-conduit` + `aeson` |
+| Frontend | Next.js 16 (App Router), React 19, Tailwind 4 |
+| Build | Stack (snapshot lts-24.67) e npm |
 | Testes | `hspec` + `yesod-test` |
-| Ambiente | Docker Compose (Postgres), GitHub Actions (CI) |
+| Ambiente | Docker Compose (Postgres), GitHub Actions (HLint, Semgrep, testes, auditoria OSV, build do frontend) |
 
 ## Como executar
 
-Pré-requisitos: [Stack](https://docs.haskellstack.org/), Docker e a biblioteca cliente do Postgres (`sudo apt install libpq-dev` no Ubuntu/Debian).
+Pré-requisitos: [Stack](https://docs.haskellstack.org/), Node 24, Docker e a biblioteca cliente do Postgres (`sudo apt install libpq-dev` no Ubuntu/Debian).
 
 ```bash
 docker compose up -d          # Postgres na porta 5433, bancos biblioteca e biblioteca_test
 stack build                   # o primeiro build baixa o GHC e compila as dependências (demora)
 stack exec biblioteca-seed    # opcional: dados de exemplo, só se o banco estiver vazio
-stack exec biblioteca         # http://localhost:3000
+stack exec biblioteca         # API em http://localhost:3000
+
+cd web && npm ci && npm run dev   # frontend em http://localhost:3001 (API_URL, padrão http://localhost:3000)
 ```
 
-O catálogo (livros, autores, editoras e categorias) é público. Sócios, empréstimos, reservas e qualquer alteração exigem login de bibliotecário. Para criar ou trocar a senha de um bibliotecário:
+Para criar ou trocar a senha de um bibliotecário:
 
 ```bash
 stack exec biblioteca-usuario -- maria   # pede a senha (mínimo 8 caracteres) sem mostrar na tela
 echo "$SENHA" | stack exec biblioteca-usuario -- maria   # em script, a senha vem pela entrada padrão
 ```
 
+Sócios são cadastrados pelo bibliotecário no painel; o sócio recebe um código e cria a própria senha em `/ativar`.
+
 - Testes: `stack test`.
-- Recarregar ao editar: `stack install yesod-bin` e depois `stack exec -- yesod devel`.
 - Outro banco: defina `YESOD_PGHOST`, `YESOD_PGPORT`, `YESOD_PGUSER`, `YESOD_PGPASS` e `YESOD_PGDATABASE` (veja `.env.example`).
-
-### Frontend novo (`web/`, em construção)
-
-O frontend em Next.js fala com a API do Yesod pelo servidor (BFF): o navegador só conversa com o Next.js, e o token da sessão fica num cookie `httpOnly`. Com a API rodando em `localhost:3000`:
-
-```bash
-cd web
-npm ci
-npm run dev                   # http://localhost:3001 (API_URL aponta para a API; padrão http://localhost:3000)
-```
-
-Por enquanto ele tem o login, a ativação da conta do sócio (`/ativar`), a vitrine do catálogo com busca e filtro por categoria (`/`), a página do livro com pedido e fila (`/livros/:id`), "Meus empréstimos" com renovação e cancelamento (`/emprestimos`) o painel do bibliotecário com números, pedidos, atrasados e devoluções do dia (`/painel`) o balcão com empréstimo em 3 passos e devolução pelo código (`/painel/balcao`), pedidos (`/painel/pedidos`), sócios (`/painel/socios`) e o acervo com livros, exemplares, importação por ISBN, autores, editoras e categorias (`/painel/acervo`); as outras telas chegam junto com os endpoints da API.
 
 ## Banco de dados
 
-Nove tabelas do domínio, definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. (`user` e `email` vêm do scaffold do Yesod e não são usadas pelo domínio.)
+Tabelas definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. Nove são do acervo e da circulação; outras quatro cuidam do acesso e do app do sócio (`user`, `sessao`, `codigo_ativacao`, `pedido`). A tabela `email` vem do scaffold do Yesod e não é usada.
 
 | Tabela | Para que serve |
 |---|---|
@@ -74,6 +81,10 @@ Nove tabelas do domínio, definidas em `config/models.persistentmodels` e criada
 | `socio` | Quem pega emprestado: e-mail único, telefone, CEP e endereço vindo do ViaCEP |
 | `emprestimo` | Exemplar + sócio, datas de empréstimo, prevista e de devolução, multa em centavos |
 | `reserva` | Fila de espera de sócio por livro, com status (Ativa, Atendida, Cancelada) |
+| `pedido` | Pedido feito pelo app: exemplar separado, código de retirada, prazo de 48 h e status |
+| `user` | Login (bibliotecário ou sócio), senha com hash e vínculo opcional com `socio` |
+| `sessao` | Hash do token de cada sessão da API e a validade |
+| `codigo_ativacao` | Hash do código de ativação do sócio, validade e tentativas |
 
 ```mermaid
 erDiagram
@@ -86,13 +97,18 @@ erDiagram
     SOCIO ||--o{ EMPRESTIMO : ""
     LIVRO ||--o{ RESERVA : ""
     SOCIO ||--o{ RESERVA : ""
+    EXEMPLAR ||--o{ PEDIDO : "separa"
+    SOCIO ||--o{ PEDIDO : ""
+    SOCIO |o--o| USER : "conta do app"
+    USER ||--o{ SESSAO : ""
+    SOCIO ||--o| CODIGO_ATIVACAO : ""
 ```
 
 As FKs são `ON DELETE RESTRICT` (o banco impede apagar o que ainda é referenciado), exceto `livro_autor → livro`, que é `CASCADE`.
 
 ## API REST
 
-A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela autentica só pelo cabeçalho `Authorization: Bearer <token>`; o cookie do site não vale lá, e por isso a API dispensa o token CSRF.
+A API em JSON fica em `/api`. Ela autentica só pelo cabeçalho `Authorization: Bearer <token>` e não cria cookie nem sessão, por isso não precisa de token CSRF. Erros saem como `{"erro": "..."}` com o status HTTP correspondente; erros de validação trazem também `campos`.
 
 | Método | Rota | Quem | Resposta |
 |---|---|---|---|
@@ -109,7 +125,7 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | DELETE | `/api/eu/reservas/:id` | sócio | Sai da fila (só a própria reserva) |
 | DELETE | `/api/reservas/:id` | bibliotecário | Cancela a reserva de qualquer sócio |
 | POST | `/api/eu/emprestimos/:id/renovacao` | sócio | Renova uma vez por mais 7 dias; 409 se já renovado, atrasado, com multa ou atraso pendente, ou com fila para o livro |
-| POST | `/api/emprestimos/:id/pagamento-multa` | bibliotecário | Registra o pagamento da multa (também pelo botão na página do empréstimo); libera pedidos e renovações |
+| POST | `/api/emprestimos/:id/pagamento-multa` | bibliotecário | Registra o pagamento da multa (botão no histórico do sócio, no painel); libera pedidos e renovações |
 | POST | `/api/pedidos/:id/retirada` | bibliotecário | Confirma a retirada no balcão e cria o empréstimo de 14 dias; 409 se o pedido venceu |
 | GET | `/api/painel` | bibliotecário | `resumo` (abertos, exemplares, pedidos, atrasados com a multa prevista, devoluções de hoje) e as listas `pedidos`, `atrasados` e `devolucoesHoje` |
 | GET | `/api/balcao/exemplares/:codigo` | bibliotecário | Exemplar pelo código (leitor ou teclado), com o livro e o empréstimo em aberto, se houver |
@@ -130,28 +146,26 @@ Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e
 
 O banco guarda só o hash SHA-256 do token (tabela `sessao`) e do código de ativação (tabela `codigo_ativacao`), nunca o valor em si. O código é de uso único e fica bloqueado depois de 5 tentativas erradas.
 
-No site antigo, o bibliotecário também gera o código pelo botão **Gerar código de ativação** na página do sócio; o sócio ativa em `/ativar` no frontend novo.
-
 ## Integração com APIs
 
 | API | Uso | Onde no código |
 |---|---|---|
-| [Open Library](https://openlibrary.org/dev/docs/api/books) | Em **Livros → Importar por ISBN**: busca o livro e grava título, autores, editora, ano, capa e trecho | `src/Integracao/OpenLibrary.hs`, `src/Handler/LivroImportar.hs` |
-| [ViaCEP](https://viacep.com.br/) | No cadastro de **sócio**: com o CEP, grava logradouro, bairro, cidade e UF | `src/Integracao/ViaCep.hs`, `src/Handler/Socio.hs` |
+| [Open Library](https://openlibrary.org/dev/docs/api/books) | `POST /api/livros/importacao`: busca o livro pelo ISBN e grava título, autores, editora, ano, capa e trecho | `src/Integracao/OpenLibrary.hs`, `src/Regras/Acervo.hs` |
+| [ViaCEP](https://viacep.com.br/) | Cadastro e edição de sócio: com o CEP, grava logradouro, bairro, cidade e UF | `src/Integracao/ViaCep.hs`, `src/Regras/Socio.hs` |
 
-Falhas de rede, timeout, ISBN ou CEP inexistente e respostas inesperadas viram mensagens para o usuário, sem erro 500.
+Falhas de rede, timeout, ISBN ou CEP inexistente e respostas inesperadas viram mensagens de erro no campo correspondente, sem erro 500.
 
 ## Organização do código
 
 ```
 config/models.persistentmodels   entidades do banco
-config/routes.yesodroutes        rotas
-src/Handler/*.hs                 um módulo de handlers por entidade
-src/Regras/*.hs                  regras de empréstimo e reserva, testáveis sem HTTP
+config/routes.yesodroutes        rotas da API
+src/Handler/Api*.hs              handlers JSON por assunto (sessões, catálogo, pedidos, balcão, cadastros…)
+src/Api/Validacao.hs             validação dos corpos JSON com erro por campo
+src/Regras/*.hs                  regras de negócio, testáveis sem HTTP
 src/Integracao/*.hs              clientes da Open Library e do ViaCEP
-src/Form/Comum.hs                campos e páginas de formulário compartilhados
-templates/                       Hamlet e Lucius por entidade
-test/                            testes de handlers, regras e integrações
+test/                            testes da API, das regras e das integrações
+web/                             frontend Next.js (área do sócio e painel do bibliotecário)
 ```
 
 ## Integrante

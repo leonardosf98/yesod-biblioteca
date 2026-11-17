@@ -3,12 +3,10 @@
 module Handler.ApiAtivacao
     ( postApiAtivacaoR
     , postApiSocioCodigoR
-    , postSocioCodigoR
     ) where
 
 import Import
 import Data.Aeson (withObject)
-import Form.Comum (mensagem)
 import Regras.Ativacao
 
 data PedidoAtivacao = PedidoAtivacao Text Text Text
@@ -33,11 +31,3 @@ postApiSocioCodigoR socioId = do
     _ <- runDB $ get404 socioId
     (codigo, expiraEm) <- runDB $ gerarCodigoAtivacao socioId
     sendStatusJSON status201 $ object ["codigo" .= codigo, "expiraEm" .= expiraEm]
-
-postSocioCodigoR :: SocioId -> Handler Html
-postSocioCodigoR socioId = do
-    _ <- runDB $ get404 socioId
-    (codigo, expiraEm) <- runDB $ gerarCodigoAtivacao socioId
-    mensagem "success" $ "Código de ativação: " <> codigo <> " (vale até " <> formatarData (utctDay expiraEm)
-        <> "). Entregue ao sócio; ele ativa a conta em /ativar com o e-mail e esse código."
-    redirect (SocioR socioId)

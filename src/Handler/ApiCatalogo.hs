@@ -66,7 +66,7 @@ getApiLivroR livroId = do
         exemplares <- selectList [ExemplarLivroId ==. livroId] [Asc ExemplarCodigo]
         contagens <- contagensDosLivros [livroId]
         return (livro, autores, editora, categoria, exemplares, contagens)
-    bibliotecario <- maybe False ((== PapelBibliotecario) . userPapel . entityVal) <$> maybeAuth
+    bibliotecario <- maybe False ((== PapelBibliotecario) . userPapel . entityVal) <$> usuarioAtual
     let contagem = contagemDe livroId contagens
     returnJson $ object
         [ "id" .= livroId

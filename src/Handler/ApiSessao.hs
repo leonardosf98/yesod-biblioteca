@@ -48,7 +48,7 @@ deleteApiSessoesR = do
 
 getApiEuR :: Handler Value
 getApiEuR = do
-    Entity _ u <- requireAuth
+    Entity _ u <- exigirUsuario
     returnJson (usuarioJson u)
 
 usuarioJson :: User -> Value

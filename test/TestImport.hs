@@ -17,7 +17,6 @@ import Model.Tipos           as X
 import Test.Hspec            as X
 import Text.Shakespeare.Text (st)
 import Yesod.Default.Config2 (useEnv, loadYamlSettings)
-import Yesod.Auth            as X
 import Yesod.Test            as X
 import Yesod.Core.Unsafe     (fakeHandlerGetLogger)
 
@@ -73,15 +72,6 @@ getTables = do
 
     return $ map unSingle tables
 
-authenticateAs :: Entity User -> YesodExample App ()
-authenticateAs (Entity _ u) = do
-    get (AuthR LoginR)
-    request $ do
-        setMethod "POST"
-        addToken_ "#form-login"
-        addPostParam "ident" $ userIdent u
-        setUrl $ AuthR $ PluginR "dummy" []
-
 criarUsuario :: Papel -> Text -> YesodExample App (Entity User)
 criarUsuario papel ident = runDB $ do
     user <- insertEntity User
@@ -99,6 +89,3 @@ criarUsuario papel ident = runDB $ do
 
 createUser :: Text -> YesodExample App (Entity User)
 createUser = criarUsuario PapelBibliotecario
-
-entrar :: YesodExample App ()
-entrar = createUser "bibliotecario" >>= authenticateAs
