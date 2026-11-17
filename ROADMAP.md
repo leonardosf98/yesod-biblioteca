@@ -10,7 +10,7 @@ Projeto final da disciplina: aplicação web em Yesod com 7+ tabelas, CRUD, uma 
 | Banco | **PostgreSQL** (`persistent-postgresql`) | Relacional "de verdade" e já temos um Supabase para hospedar. Em dev, roda via Docker |
 | Domínio | **Biblioteca comunitária**: acervo, sócios, empréstimos, reservas | As 7+ tabelas saem do próprio domínio, sem nenhuma artificial |
 | APIs externas | **Open Library** (busca por ISBN) e **ViaCEP** (endereço do sócio) | Os dados recebidos são gravados e usados, não só consultados |
-| Build | `stack` + template `yesodweb/postgres` (lts-20.26, GHC 9.2.8) | O scaffold já vem com Persistent, formulários, sessão e testes configurados |
+| Build | `stack` + template `yesodweb/postgres`; hoje no lts-24.67 (GHC 9.10.3) com `warp-3.4.17` como extra-dep | O scaffold já vem com Persistent, formulários, sessão e testes configurados; o snapshot foi atualizado para corrigir avisos de segurança (HSEC) do warp, aeson e scientific |
 | Hospedagem (opcional) | Render ou Fly.io + Postgres no Supabase | Conta como diferencial na apresentação |
 
 ## Modelo de dados (9 tabelas)
@@ -159,9 +159,9 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend-nextjs.md). Ponto de partida estável: tag `v1.0.0`.
 
 - [ ] 13.1 CI completo: hlint, Semgrep, auditoria de dependências pela OSV, testes e pr-risk-tier
-- [ ] 13.2 Papéis (bibliotecário e sócio) e sessões por token na API
+- [ ] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão
 - [ ] 13.3 API do catálogo
-- [ ] 13.4 Pedido de empréstimo pelo sócio: retirada, expiração e renovação
+- [ ] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento
 - [ ] 13.5 API de cadastros e importação por ISBN
 - [ ] 13.6 Esqueleto do `web/` em Next.js com design system e login via BFF
 - [ ] 13.7 Área do sócio

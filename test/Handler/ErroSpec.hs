@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Handler.ErroSpec (spec) where
 
-import Data.Time (fromGregorian)
 import Database.Persist.Sql (toSqlKey)
 import Formato (formatarData)
 import Seed (popular)

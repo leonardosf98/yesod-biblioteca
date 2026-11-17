@@ -25,31 +25,36 @@ Navegador ──> Next.js (Vercel) ──server-to-server──> API Yesod (Ligh
 | Papel | Como entra | O que pode |
 |---|---|---|
 | Visitante | — | Ver o catálogo |
-| Sócio | E-mail e senha | Catálogo, pedir empréstimo, reservar, renovar, ver os próprios empréstimos e editar o perfil |
+| Sócio | E-mail e senha, depois de ativar a conta | Catálogo, pedir empréstimo, reservar, renovar, ver os próprios empréstimos e editar o perfil |
 | Bibliotecário | Login e senha | Tudo, incluindo cadastros, balcão e relatórios |
 
 - Senhas com hash (`password`/bcrypt, como no `yesod-auth-hashdb`).
 - `POST /api/sessoes` devolve um token opaco aleatório; o banco guarda só o hash do token, com validade. `DELETE /api/sessoes` encerra.
 - `isAuthorized` decide por papel e por rota; o sócio só enxerga os próprios dados (checado no handler, não só na rota).
-- Modelo: `User` ganha `papel` (`Bibliotecario | Socio`); `Socio` ganha `userId` opcional (sócio cadastrado no balcão pode ativar o acesso depois); nova tabela `Sessao` (userId, hash do token, expira em).
+- Modelo: `User` ganha `papel` (`Bibliotecario | Socio`); `Socio` ganha `userId` opcional; nova tabela `Sessao` (userId, hash do token, expira em).
+- **Sem cadastro aberto.** O sócio é sempre cadastrado no balcão. O bibliotecário gera um **código de ativação** no painel (uso único, válido por 7 dias, guardado só como hash em `Socio`) e entrega à pessoa. Em `/ativar`, ela informa e-mail, código e a senha que quer usar; o sistema cria o `User` com papel Sócio e liga ao `Socio`. Gerar um novo código invalida o anterior; a mesma tela serve para redefinir a senha esquecida.
 
 ## Empréstimo pelo sócio
 
 O livro é físico, então o pedido do sócio separa um exemplar e o empréstimo começa na retirada:
 
+0. Sócio com multa pendente não pode pedir nem renovar até o bibliotecário registrar o pagamento.
 1. Sócio pede o livro → o sistema separa um exemplar disponível (mesma reserva atômica de hoje) e cria o empréstimo com status **Aguardando retirada**, válido por 48 h.
 2. Bibliotecário confirma a retirada no balcão → status **Em andamento**, prazo de 14 dias a partir daí.
 3. Passadas 48 h sem retirada → **Expirado**, exemplar liberado (verificado ao listar e ao pedir, sem precisar de job agendado).
 4. Sem exemplar disponível → o botão vira **Entrar na fila** (reserva, como hoje).
 5. Sócio pode **renovar uma vez** por mais 7 dias se não houver fila para o livro.
 
-`Emprestimo` ganha `status` e `dataLimiteRetirada`; as regras continuam em `src/Regras/Emprestimo.hs`, com testes.
+`Emprestimo` ganha `status`, `dataLimiteRetirada` e `multaPagaEm` (data em que o bibliotecário registrou o pagamento); as regras continuam em `src/Regras/Emprestimo.hs`, com testes.
 
 ## API REST (Yesod, JSON)
 
 | Método | Rota | Quem | Para quê |
 |---|---|---|---|
 | POST / DELETE | `/api/sessoes` | todos | Entrar e sair |
+| POST | `/api/ativacao` | público | Ativar a conta (e-mail, código, senha) |
+| POST | `/api/socios/:id/codigo-ativacao` | bibliotecário | Gerar código de ativação |
+| POST | `/api/emprestimos/:id/pagamento-multa` | bibliotecário | Registrar pagamento de multa |
 | GET | `/api/livros?busca=&categoria=` | público | Catálogo com capa, autores e disponibilidade |
 | GET | `/api/livros/:id` | público | Detalhe com exemplares disponíveis |
 | POST | `/api/livros/:id/pedidos` | sócio | Pedir empréstimo |
@@ -75,9 +80,9 @@ Erros em JSON com status coerente (400 validação com erros por campo, 401, 403
 | # | Fatia | Entrega |
 |---|---|---|
 | 1 | CI completo | hlint, Semgrep, auditoria de dependências pela OSV, testes, pr-risk-tier |
-| 2 | Papéis e sessões | `User.papel`, `Sessao`, `POST/DELETE /api/sessoes`, `isAuthorized` por papel |
+| 2 | Papéis, sessões e ativação | `User.papel`, `Sessao`, `POST/DELETE /api/sessoes`, código de ativação, `isAuthorized` por papel |
 | 3 | API do catálogo | `GET /api/livros` e detalhe, JSON com disponibilidade |
-| 4 | Pedido pelo sócio | status do empréstimo, retirada, expiração, renovação, endpoints `/api/eu/*` |
+| 4 | Pedido pelo sócio | status do empréstimo, retirada em 48 h, expiração, renovação, bloqueio por multa, pagamento de multa, endpoints `/api/eu/*` |
 | 5 | API de cadastros | CRUD JSON das entidades e importação por ISBN |
 | 6 | Esqueleto do `web/` | Next.js, design system, layout das duas áreas, login via BFF, CI do frontend |
 | 7 | Área do sócio | vitrine, detalhe, pedir/reservar, meus empréstimos, perfil |
@@ -87,15 +92,17 @@ Erros em JSON com status coerente (400 validação com erros por campo, 401, 403
 
 ## Critérios de aceite
 
-- Sócio cria conta (ou ativa a criada no balcão), entra, acha um livro, pede, e o bibliotecário confirma a retirada; o exemplar some da disponibilidade no catálogo no mesmo instante.
+- Bibliotecário cadastra o sócio e gera o código; o sócio ativa a conta, entra, acha um livro, pede, e o bibliotecário confirma a retirada; o exemplar some da disponibilidade no catálogo no mesmo instante.
+- Código de ativação vencido, usado ou de outro e-mail é recusado.
+- Sócio com multa pendente não consegue pedir nem renovar.
 - Sócio não vê nem altera dados de outro sócio (testado na API).
 - Todas as regras atuais continuam valendo e testadas: limite de 3, multa, exemplar perdido, fila de reservas.
 - Telas do sócio usáveis no celular.
 - CI verde com SAST e auditoria de dependências; a `v1.0.0` segue disponível como fallback.
 
-## Em aberto
+## Decisões (16/11/2026)
 
-- Sócio pode se cadastrar sozinho ou só ativar conta criada no balcão?
-- O pedido expira em 48 h — o prazo serve?
-- Multa pendente bloqueia novos pedidos do sócio?
-- Manter o Hamlet como plano B depois da fatia 10 ou apagar de vez (menos código para explicar na arguição)?
+1. **Sem cadastro aberto**: o sócio é cadastrado no balcão e ativa o acesso com código de uso único.
+2. **48 h** para retirar o livro pedido.
+3. **Multa pendente bloqueia** novos pedidos e renovações até o pagamento ser registrado.
+4. **Apagar as páginas Hamlet** na fatia 10; a `v1.0.0` fica como registro da versão monolítica.
