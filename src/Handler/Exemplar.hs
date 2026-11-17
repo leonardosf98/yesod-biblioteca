@@ -3,9 +3,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Handler.Exemplar where
 
-import Database.Persist.Sql (fromSqlKey)
 import Form.Comum
 import Import
+import Regras.Acervo (gerarCodigoExemplar)
 
 exemplarForm :: Maybe Exemplar -> Form (Maybe Text, EstadoExemplar)
 exemplarForm atual = renderizar $ (,)
@@ -18,13 +18,7 @@ codigoRepetido :: Text
 codigoRepetido = "Já existe um exemplar com esse código."
 
 gerarCodigo :: LivroId -> Handler Text
-gerarCodigo livroId = runDB $ do
-    existentes <- count [ExemplarLivroId ==. livroId]
-    let candidatos = [prefixo <> tshow n | n <- [existentes + 1 ..]]
-    livres <- filterM (fmap isNothing . getBy . UniqueCodigo) (take 50 candidatos)
-    maybe (error "sem código livre") return (headMay livres)
-  where
-    prefixo = "L" <> tshow (fromSqlKey livroId) <> "-"
+gerarCodigo = runDB . gerarCodigoExemplar
 
 codigoEmUso :: Text -> Maybe ExemplarId -> Handler Bool
 codigoEmUso codigo proprio = do
