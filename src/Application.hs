@@ -42,15 +42,6 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
 import Handler.Home
-import Handler.Autor
-import Handler.Editora
-import Handler.Categoria
-import Handler.Livro
-import Handler.LivroImportar
-import Handler.Exemplar
-import Handler.Socio
-import Handler.Emprestimo
-import Handler.Reserva
 import Handler.ApiSessao
 import Handler.ApiAtivacao
 import Handler.ApiCatalogo
@@ -71,13 +62,8 @@ mkYesodDispatch "App" resourcesApp
 -- migrations handled by Yesod.
 makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
-    -- Some basic initializations: HTTP connection manager, logger, and static
-    -- subsite.
     appHttpManager <- getGlobalManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-    appStatic <-
-        (if appMutableStatic appSettings then staticDevel else static)
-        (appStaticDir appSettings)
 
     -- We need a log function to create a connection pool. We need a connection
     -- pool to create our foundation. And we need our foundation to get a

@@ -42,11 +42,6 @@ spec = withApp $ describe "API de sessões" $ do
         comToken Nothing ApiEuR "GET"
         statusIs 401
 
-    it "o cookie de sessão do site não vale na API" $ do
-        entrar
-        comToken Nothing ApiEuR "GET"
-        statusIs 401
-
     it "token desconhecido ou vencido é recusado" $ do
         usuario <- createUser "maria"
         agora <- liftIO getCurrentTime
@@ -64,11 +59,3 @@ spec = withApp $ describe "API de sessões" $ do
         statusIs 204
         comToken (Just token) ApiEuR "GET"
         statusIs 401
-
-    it "rota do site com cookie continua exigindo CSRF no POST" $ do
-        entrar
-        request $ do
-            setMethod "POST"
-            setUrl AutoresR
-            addPostParam "nome" "Sem token"
-        statusIs 403

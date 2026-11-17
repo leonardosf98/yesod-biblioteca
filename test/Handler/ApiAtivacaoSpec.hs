@@ -109,18 +109,6 @@ spec = withApp $ describe "Ativação da conta do sócio" $ do
         enviarJson (Just token) (ApiSocioCodigoR socioId) (object [] :: Value)
         statusIs 403
 
-    it "bibliotecário gera o código pela página do sócio" $ do
-        entrar
-        socioId <- novoSocio "ana@example.com"
-        get (SocioR socioId)
-        request $ do
-            setMethod "POST"
-            setUrl (SocioCodigoR socioId)
-            addToken_ ".form-codigo"
-        statusIs 303
-        _ <- followRedirect
-        htmlAnyContain ".alert" "Código de ativação"
-
     it "não transforma conta de bibliotecário em conta de sócio" $ do
         _ <- runDB $ salvarBibliotecario "ana@example.com" "senha-da-ana-1"
         socioId <- novoSocio "ana@example.com"

@@ -53,3 +53,13 @@ export async function cancelarReserva(reservaId: number): Promise<ResultadoAcao>
   revalidatePath("/painel/socios", "layout");
   return { ok: "Reserva cancelada." };
 }
+
+export async function registrarPagamento(emprestimoId: number): Promise<ResultadoAcao> {
+  try {
+    await api(`/api/emprestimos/${emprestimoId}/pagamento-multa`, { method: "POST" });
+  } catch (erro) {
+    return { erro: erro instanceof ErroApi ? erro.message : "Não foi possível registrar o pagamento." };
+  }
+  revalidatePath("/painel", "layout");
+  return { ok: "Pagamento registrado." };
+}
