@@ -114,6 +114,8 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | POST | `/api/emprestimos` | bibliotecário | Corpo `{"socioId", "exemplarId"}`; empréstimo de 14 dias no balcão; 409 com o motivo (pendência, limite, exemplar indisponível ou perdido) |
 | POST | `/api/emprestimos/:id/devolucao` | bibliotecário | Registra a devolução e devolve `multaCentavos` |
 | GET | `/api/socios?busca=` | bibliotecário | Até 20 sócios por nome ou e-mail, com `emUso`, `pendencias` e `contaAtiva` |
+| GET / POST | `/api/autores`, `/api/editoras`, `/api/categorias` | leitura pública, escrita do bibliotecário | Lista com a contagem de `livros`; criação com validação por campo (`400 {"erro", "campos"}`) e nome único para editora e categoria (409) |
+| PUT / DELETE | `/api/autores/:id`, `/api/editoras/:id`, `/api/categorias/:id` | bibliotecário | Edita ou exclui; 409 ao excluir algo ligado a livros |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 
 Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e ao pedir, sem tarefa agendada.
