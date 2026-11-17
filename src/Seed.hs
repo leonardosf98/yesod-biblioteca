@@ -104,7 +104,7 @@ acervo =
     , romance (Just "iaia-garcia") "Iaiá Garcia" [machado] (Just 1878) 1
     , contos (Just "historias-sem-data") "Histórias sem Data" [machado] (Just 1884) 1
     , contos (Just "papeis-avulsos") "Papéis Avulsos" [machado] (Just 1882) 2
-    , contos Nothing "Relíquias de Casa Velha" [machado] (Just 1906) 1
+    , contos (Just "reliquias-de-casa-velha") "Relíquias de Casa Velha" [machado] (Just 1906) 1
     , poesia Nothing "Poesias Completas" [machado] (Just 1901) 1
     , romance (Just "iracema") "Iracema" [alencar] (Just 1865) 2
     , romance (Just "o-guarani") "O Guarani" [alencar] (Just 1857) 2
