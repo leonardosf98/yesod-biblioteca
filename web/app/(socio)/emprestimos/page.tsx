@@ -2,7 +2,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cancelarPedido, renovar } from "@/app/(socio)/acoes";
+import { cancelarPedido, renovar, sairDaFila } from "@/app/(socio)/acoes";
 import { BotaoAcao } from "@/components/botao-acao";
 import { Capa } from "@/components/capa";
 import { usuarioAtual } from "@/lib/api";
@@ -85,6 +85,7 @@ export default async function MeusEmprestimos({ searchParams }: Props) {
                     <h2 className="font-semibold">{r.livro.titulo}</h2>
                     <p className="text-sm text-texto-suave">Avisamos quando um exemplar voltar; você terá 48 h para retirar.</p>
                   </div>
+                  <BotaoAcao acao={sairDaFila.bind(null, r.id)} rotulo="Sair da fila" pendente="Saindo…" variante="contorno" className="ml-auto" />
                 </article>
               ))}
             </>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { atualizarSocio, excluirSocio, gerarCodigo } from "@/app/painel/socios/acoes";
+import { atualizarSocio, cancelarReserva, excluirSocio, gerarCodigo } from "@/app/painel/socios/acoes";
 import { BotaoAcao } from "@/components/botao-acao";
 import { CamposSocio } from "@/components/campos-socio";
 import { Formulario } from "@/components/formulario";
@@ -70,7 +70,14 @@ export default async function PaginaSocio({ params }: { params: Promise<{ id: st
           {socio.reservas.length > 0 && (
             <section className="rounded-2xl border border-borda bg-superficie p-5 text-sm">
               <h2 className="mb-2 font-semibold">Na fila de</h2>
-              <ul className="list-inside list-disc text-texto-suave">{socio.reservas.map((r) => <li key={r.id}>{r.livro}</li>)}</ul>
+              <ul className="flex flex-col gap-2">
+                {socio.reservas.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-2">
+                    <span className="text-texto-suave">{r.livro}</span>
+                    <BotaoAcao acao={cancelarReserva.bind(null, r.id)} rotulo="Cancelar" pendente="…" variante="fantasma" />
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
           <BotaoAcao acao={excluirSocio.bind(null, socio.id)} rotulo="Excluir sócio" pendente="Excluindo…" variante="fantasma" className="w-fit" confirmar={`Excluir ${socio.nome}? A conta do app também será apagada.`} />

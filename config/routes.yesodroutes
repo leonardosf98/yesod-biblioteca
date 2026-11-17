@@ -87,3 +87,5 @@
 !/api/livros/importacao ApiLivroImportacaoR POST
 /api/livros/#LivroId/exemplares ApiLivroExemplaresR POST
 /api/exemplares/#ExemplarId ApiExemplarR PUT DELETE
+/api/eu/reservas/#ReservaId ApiEuReservaR DELETE
+/api/reservas/#ReservaId ApiReservaR DELETE

@@ -260,3 +260,22 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
             statusIs 303
             paga <- runDB $ emprestimoMultaPagaEm <$> getJust e
             assertEq "paga hoje" (Just dia) paga
+
+        it "sócio sai da fila; não cancela a de outro; bibliotecário cancela qualquer uma" $ do
+            c <- cenario
+            (outro, t2) <- novoSocio "bia@example.com"
+            dia <- hoje
+            (minha, dela) <- runDB $ (,) <$> insert (Reserva (livro c) (socio c) dia Ativa) <*> insert (Reserva (livro c) outro dia Ativa)
+            comToken (Just t2) (ApiEuReservaR minha) "DELETE"
+            statusIs 404
+            comToken (Just (token c)) (ApiEuReservaR minha) "DELETE"
+            statusIs 204
+            comToken (Just (token c)) (ApiEuReservaR minha) "DELETE"
+            statusIs 409
+            comToken (Just (token c)) (ApiReservaR dela) "DELETE"
+            statusIs 403
+            t <- tokenBibliotecario
+            comToken (Just t) (ApiReservaR dela) "DELETE"
+            statusIs 204
+            status <- runDB $ map (reservaStatus . entityVal) <$> selectList [ReservaLivroId ==. livro c] [Asc ReservaId]
+            assertEq "ambas canceladas" [Cancelada, Cancelada] status

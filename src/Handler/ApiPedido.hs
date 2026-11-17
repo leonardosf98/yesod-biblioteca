@@ -8,6 +8,8 @@ module Handler.ApiPedido
     , postApiEuRenovacaoR
     , postApiLivroReservasR
     , postApiPagamentoMultaR
+    , deleteApiEuReservaR
+    , deleteApiReservaR
     ) where
 
 import Import
@@ -15,7 +17,7 @@ import Data.List (findIndex)
 import qualified Data.Map.Strict as Map
 import Regras.Emprestimo (hoje, limiteAbertos, registrarPagamentoMulta)
 import Regras.Pedido
-import Regras.Reserva (criarReserva, filaDeReservas)
+import Regras.Reserva (cancelarReserva, criarReserva, filaDeReservas)
 
 socioAtual :: Handler SocioId
 socioAtual = do
@@ -146,4 +148,20 @@ postApiPagamentoMultaR :: EmprestimoId -> Handler Value
 postApiPagamentoMultaR emprestimoId = do
     dia <- hoje
     resultado <- runDB $ registrarPagamentoMulta emprestimoId dia
+    either (recusar status409) (const (sendResponseStatus status204 ())) resultado
+
+deleteApiEuReservaR :: ReservaId -> Handler Value
+deleteApiEuReservaR reservaId = do
+    socioId <- socioAtual
+    reserva <- runDB $ get reservaId
+    case reserva of
+        Just r | reservaSocioId r == socioId -> cancelar reservaId
+        _ -> recusar status404 "Reserva não encontrada."
+
+deleteApiReservaR :: ReservaId -> Handler Value
+deleteApiReservaR reservaId = runDB (get404 reservaId) >> cancelar reservaId
+
+cancelar :: ReservaId -> Handler Value
+cancelar reservaId = do
+    resultado <- runDB $ cancelarReserva reservaId
     either (recusar status409) (const (sendResponseStatus status204 ())) resultado
