@@ -1,15 +1,17 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { Capa } from "@/components/capa";
+import { Paginacao } from "@/components/paginacao";
 import { SeloDisponibilidade } from "@/components/selo-disponibilidade";
 import { cn } from "@/lib/cn";
 import { buscarCatalogo } from "@/lib/catalogo";
 
-type Props = { searchParams: Promise<{ busca?: string; categoria?: string }> };
+type Props = { searchParams: Promise<{ busca?: string; categoria?: string; pagina?: string }> };
 
 export default async function Catalogo({ searchParams }: Props) {
-  const { busca = "", categoria = "" } = await searchParams;
-  const { livros, categorias } = await buscarCatalogo({ busca, categoria });
+  const { busca = "", categoria = "", pagina } = await searchParams;
+  const catalogo = await buscarCatalogo({ busca, categoria, pagina, porPagina: 20 });
+  const { livros, categorias } = catalogo;
 
   const linkCategoria = (id?: number) => {
     const parametros = new URLSearchParams();
@@ -72,6 +74,8 @@ export default async function Catalogo({ searchParams }: Props) {
           ))}
         </ul>
       )}
+
+      <Paginacao {...catalogo} caminho="/" parametros={{ busca, categoria }} />
     </div>
   );
 }

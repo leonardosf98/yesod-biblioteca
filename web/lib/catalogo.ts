@@ -12,12 +12,21 @@ export type LivroResumo = {
   disponiveis: number;
   fila: number;
 };
-export type Catalogo = { livros: LivroResumo[]; categorias: Categoria[] };
+export type Catalogo = {
+  livros: LivroResumo[];
+  categorias: Categoria[];
+  pagina: number;
+  porPagina: number;
+  total: number;
+  paginas: number;
+};
 
-export function buscarCatalogo(filtros: { busca?: string; categoria?: string }) {
+export function buscarCatalogo(filtros: { busca?: string; categoria?: string; pagina?: string; porPagina?: number }) {
   const parametros = new URLSearchParams();
   if (filtros.busca) parametros.set("busca", filtros.busca);
   if (filtros.categoria) parametros.set("categoria", filtros.categoria);
+  if (filtros.pagina) parametros.set("pagina", filtros.pagina);
+  if (filtros.porPagina) parametros.set("porPagina", String(filtros.porPagina));
   const consulta = parametros.size ? `?${parametros}` : "";
   return api<Catalogo>(`/api/livros${consulta}`);
 }

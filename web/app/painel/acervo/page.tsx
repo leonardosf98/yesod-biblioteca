@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { excluir, importarIsbn, salvarCadastro, type Cadastro } from "@/app/painel/acervo/acoes";
 import { BotaoAcao } from "@/components/botao-acao";
+import { Paginacao } from "@/components/paginacao";
 import { Campo, Escolha, Formulario } from "@/components/formulario";
 import { TopoPainel } from "@/components/topo-painel";
 import { estiloBotao } from "@/components/ui/button";
@@ -19,10 +20,10 @@ const abas = [
   { id: "categorias", rotulo: "Categorias" },
 ];
 
-type Props = { searchParams: Promise<{ aba?: string; busca?: string }> };
+type Props = { searchParams: Promise<{ aba?: string; busca?: string; pagina?: string }> };
 
 export default async function Acervo({ searchParams }: Props) {
-  const { aba = "livros", busca = "" } = await searchParams;
+  const { aba = "livros", busca = "", pagina } = await searchParams;
   const categorias = await listarCategorias();
 
   return (
@@ -37,7 +38,7 @@ export default async function Acervo({ searchParams }: Props) {
             </Link>
           ))}
         </nav>
-        {aba === "livros" && <AbaLivros busca={busca} categorias={categorias} />}
+        {aba === "livros" && <AbaLivros busca={busca} pagina={pagina} categorias={categorias} />}
         {aba === "autores" && <AbaCadastro tipo="autores" itens={(await listarAutores()).map((a) => ({ id: a.id, nome: a.nome, extra: a.nacionalidade, livros: a.livros }))} />}
         {aba === "editoras" && <AbaCadastro tipo="editoras" itens={(await listarEditoras()).map((e) => ({ id: e.id, nome: e.nome, extra: e.cidade, livros: e.livros }))} />}
         {aba === "categorias" && <AbaCadastro tipo="categorias" itens={categorias.map((c) => ({ id: c.id, nome: c.nome, extra: c.descricao, livros: c.livros }))} />}
@@ -46,8 +47,9 @@ export default async function Acervo({ searchParams }: Props) {
   );
 }
 
-async function AbaLivros({ busca, categorias }: { busca: string; categorias: { id: number; nome: string }[] }) {
-  const { livros } = await buscarCatalogo({ busca });
+async function AbaLivros({ busca, pagina, categorias }: { busca: string; pagina?: string; categorias: { id: number; nome: string }[] }) {
+  const catalogo = await buscarCatalogo({ busca, pagina, porPagina: 25 });
+  const { livros } = catalogo;
   return (
     <>
       <div className="flex flex-wrap items-end gap-4">
@@ -85,6 +87,7 @@ async function AbaLivros({ busca, categorias }: { busca: string; categorias: { i
           </tbody>
         </table>
       </div>
+      <Paginacao {...catalogo} caminho="/painel/acervo" parametros={{ aba: "livros", busca }} />
     </>
   );
 }

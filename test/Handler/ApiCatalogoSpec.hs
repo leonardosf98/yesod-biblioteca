@@ -73,6 +73,23 @@ spec = withApp $ describe "API do catálogo" $ do
         livros <- listar [("categoria", toPathPiece (romance acervo))]
         assertEq "só romance" ["Dom Casmurro"] (map (\(t, _, _, _) -> t) livros)
 
+    it "pagina o catálogo e informa o total" $ do
+        _ <- montarAcervo
+        primeira <- listar [("porPagina", "1")]
+        assertEq "primeira página" ["Dom Casmurro"] (map (\(t, _, _, _) -> t) primeira)
+        bodyContains "\"total\":2"
+        bodyContains "\"paginas\":2"
+        segunda <- listar [("porPagina", "1"), ("pagina", "2")]
+        assertEq "segunda página" ["Vidas Secas"] (map (\(t, _, _, _) -> t) segunda)
+        alem <- listar [("porPagina", "1"), ("pagina", "9")]
+        assertEq "página além do fim" [] alem
+
+    it "ignora pagina e porPagina inválidos" $ do
+        _ <- montarAcervo
+        livros <- listar [("pagina", "abc"), ("porPagina", "0")]
+        assertEq "volta para a primeira página" 1 (length livros)
+        bodyContains "\"porPagina\":1"
+
     it "detalhe traz exemplares sem os perdidos" $ do
         acervo <- montarAcervo
         request $ do
