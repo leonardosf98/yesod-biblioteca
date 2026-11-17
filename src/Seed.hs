@@ -6,12 +6,13 @@ import ClassyPrelude.Yesod
 import Data.Time (addDays)
 import Model
 import Model.Tipos
+import Regras.Emprestimo (hoje)
 
 popular :: MonadIO m => ReaderT SqlBackend m ()
 popular = do
     categorias <- count ([] :: [Filter Categoria])
     when (categorias == 0) $ do
-        hoje <- utctDay <$> liftIO getCurrentTime
+        dia <- hoje
 
         romance <- insert $ Categoria "Romance" (Just "Ficção em prosa")
         ficcao <- insert $ Categoria "Ficção científica" Nothing
@@ -47,9 +48,9 @@ popular = do
             Nothing Nothing Nothing Nothing Nothing Nothing
 
         insertMany_
-            [ Emprestimo dc1 ana (addDays (-20) hoje) (addDays (-6) hoje) Nothing 0
-            , Emprestimo br1 bruno (addDays (-30) hoje) (addDays (-16) hoje) (Just (addDays (-14) hoje)) 0
-            , Emprestimo fu1 bruno (addDays (-3) hoje) (addDays 11 hoje) Nothing 0
+            [ Emprestimo dc1 ana (addDays (-20) dia) (addDays (-6) dia) Nothing 0
+            , Emprestimo br1 bruno (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 0
+            , Emprestimo fu1 bruno (addDays (-3) dia) (addDays 11 dia) Nothing 0
             ]
 
-        insert_ $ Reserva fundacao ana hoje Ativa
+        insert_ $ Reserva fundacao ana dia Ativa
