@@ -159,7 +159,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend-nextjs.md). Ponto de partida estável: tag `v1.0.0`.
 
 - [ ] 13.1 CI completo: hlint, Semgrep, auditoria de dependências pela OSV, testes e pr-risk-tier
-- [ ] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão (2a papéis e login: feito; 2b tokens da API; 2c ativação)
+- [ ] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão (2a papéis e login: feito; 2b tokens da API: feito; 2c ativação)
 - [ ] 13.3 API do catálogo
 - [ ] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento
 - [ ] 13.5 API de cadastros e importação por ISBN
