@@ -32,7 +32,7 @@ Navegador ──> Next.js (Vercel) ──server-to-server──> API Yesod (Ligh
 - `POST /api/sessoes` devolve um token opaco aleatório; o banco guarda só o hash do token, com validade. `DELETE /api/sessoes` encerra.
 - `isAuthorized` decide por papel e por rota; o sócio só enxerga os próprios dados (checado no handler, não só na rota).
 - Modelo: `User` ganha `papel` (`Bibliotecario | Socio`); `Socio` ganha `userId` opcional; nova tabela `Sessao` (userId, hash do token, expira em).
-- **Sem cadastro aberto.** O sócio é sempre cadastrado no balcão. O bibliotecário gera um **código de ativação** no painel (uso único, válido por 7 dias, guardado só como hash em `Socio`) e entrega à pessoa. Em `/ativar`, ela informa e-mail, código e a senha que quer usar; o sistema cria o `User` com papel Sócio e liga ao `Socio`. Gerar um novo código invalida o anterior; a mesma tela serve para redefinir a senha esquecida.
+- **Sem cadastro aberto.** O sócio é sempre cadastrado no balcão. O bibliotecário gera um **código de ativação** no painel (uso único, válido por 7 dias, bloqueado após 5 tentativas erradas, guardado só como hash na tabela `CodigoAtivacao`) e entrega à pessoa. Em `/ativar`, ela informa e-mail, código e a senha que quer usar; o sistema cria o `User` com papel Sócio e liga ao `Socio`. Gerar um novo código invalida o anterior; a mesma tela serve para redefinir a senha esquecida.
 
 ## Empréstimo pelo sócio
 

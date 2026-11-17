@@ -90,3 +90,10 @@ Sessao
     tokenHash Text
     expiraEm UTCTime
     UniqueSessaoToken tokenHash
+
+CodigoAtivacao
+    socioId SocioId OnDeleteCascade
+    hash Text
+    expiraEm UTCTime
+    tentativas Int default=0
+    UniqueCodigoAtivacaoSocio socioId
