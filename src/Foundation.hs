@@ -28,6 +28,8 @@ import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
+import Sessao (hashToken)
+import Network.Wai (pathInfo)
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -98,7 +100,7 @@ instance Yesod App where
     -- To add it, chain it together with the defaultMiddleware: yesodMiddleware = defaultYesodMiddleware . defaultCsrfMiddleware
     -- For details, see the CSRF documentation in the Yesod.Core.Handler module of the yesod-core package.
     yesodMiddleware :: ToTypedContent res => Handler res -> Handler res
-    yesodMiddleware = defaultYesodMiddleware . defaultCsrfMiddleware
+    yesodMiddleware = defaultYesodMiddleware . csrfForaDaApi
 
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
@@ -198,6 +200,7 @@ instance Yesod App where
     isAuthorized rota escrita
         | rotaLivre rota = return Authorized
         | not escrita && catalogo rota = return Authorized
+        | rota == ApiEuR = exigirLogin
         | otherwise = exigirPapel PapelBibliotecario
 
     -- This function creates static content files in the static folder
@@ -242,15 +245,39 @@ instance Yesod App where
     errorHandler (PermissionDenied _) = paginaDeErro "Acesso negado" "A requisição foi recusada. Recarregue a página e tente de novo."
     errorHandler outro = defaultErrorHandler outro
 
-paginaDeErro :: Html -> Html -> Handler TypedContent
-paginaDeErro titulo explicacao = selectRep $ provideRep $ defaultLayout $ do
-    setTitle titulo
+paginaDeErro :: Text -> Text -> Handler TypedContent
+paginaDeErro titulo explicacao = selectRep $ do
+  provideRep $ defaultLayout $ do
+    setTitle (toHtml titulo)
     [whamlet|
 <div .pagina-erro>
     <h1>#{titulo}
     <p .lead>#{explicacao}
     <a .btn .btn-primary href=@{HomeR}>Voltar ao início
 |]
+  provideRep $ return $ object ["erro" .= explicacao]
+
+rotaDaApi :: [Text] -> Bool
+rotaDaApi ("api" : _) = True
+rotaDaApi _ = False
+
+-- A API autentica só pelo cabeçalho Bearer, nunca pelo cookie de sessão; por isso dispensa o token CSRF.
+csrfForaDaApi :: Handler res -> Handler res
+csrfForaDaApi handler = do
+    caminho <- pathInfo <$> waiRequest
+    if rotaDaApi caminho then handler else defaultCsrfMiddleware handler
+
+usuarioDoToken :: Handler (Maybe UserId)
+usuarioDoToken = do
+    token <- lookupBearerAuth
+    case token of
+        Nothing -> return Nothing
+        Just valor -> do
+            agora <- liftIO getCurrentTime
+            sessao <- runDB $ getBy (UniqueSessaoToken (hashToken valor))
+            return $ case sessao of
+                Just (Entity _ s) | sessaoExpiraEm s > agora -> Just (sessaoUserId s)
+                _ -> Nothing
 
 rotaLivre :: Route App -> Bool
 rotaLivre rota = case rota of
@@ -259,6 +286,7 @@ rotaLivre rota = case rota of
     FaviconR -> True
     RobotsR -> True
     StaticR _ -> True
+    ApiSessoesR -> True
     _ -> False
 
 catalogo :: Route App -> Bool
@@ -281,6 +309,9 @@ exigirPapel papel = do
         Just (Entity _ u)
             | userPapel u == papel -> Authorized
             | otherwise -> Unauthorized "Acesso restrito ao bibliotecário."
+
+exigirLogin :: Handler AuthResult
+exigirLogin = maybe AuthenticationRequired (const Authorized) <$> maybeAuthId
 
 formularioLogin :: Route App -> Widget
 formularioLogin acao = do
@@ -389,6 +420,10 @@ instance YesodAuth App where
     authPlugins app = authHashDBWithForm formularioLogin (Just . UniqueUser) : extraAuthPlugins
         -- Enable authDummy login if enabled.
         where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
+
+    maybeAuthId = liftHandler $ do
+        caminho <- pathInfo <$> waiRequest
+        if rotaDaApi caminho then usuarioDoToken else defaultMaybeAuthId
 
     renderAuthMessage :: App -> [Text] -> AuthMessage -> Text
     renderAuthMessage _ _ = portugueseMessage

@@ -40,6 +40,7 @@ O catálogo (livros, autores, editoras e categorias) é público. Sócios, empr�
 
 ```bash
 stack exec biblioteca-usuario -- maria   # pede a senha (mínimo 8 caracteres) sem mostrar na tela
+echo "$SENHA" | stack exec biblioteca-usuario -- maria   # em script, a senha vem pela entrada padrão
 ```
 
 - Testes: `stack test`.
@@ -76,6 +77,18 @@ erDiagram
 ```
 
 As FKs são `ON DELETE RESTRICT` (o banco impede apagar o que ainda é referenciado), exceto `livro_autor → livro`, que é `CASCADE`.
+
+## API REST
+
+A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela autentica só pelo cabeçalho `Authorization: Bearer <token>`; o cookie do site não vale lá, e por isso a API dispensa o token CSRF.
+
+| Método | Rota | Quem | Resposta |
+|---|---|---|---|
+| POST | `/api/sessoes` | todos | Corpo `{"login", "senha"}`. 201 com `token`, `expiraEm` (7 dias) e `usuario`; 401 se login ou senha não conferem |
+| DELETE | `/api/sessoes` | com token | 204; o token deixa de valer |
+| GET | `/api/eu` | com token | `{"login", "papel"}`; 401 sem token válido |
+
+O banco guarda só o hash SHA-256 do token (tabela `sessao`), nunca o token em si.
 
 ## Integração com APIs
 

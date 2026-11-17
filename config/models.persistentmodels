@@ -84,3 +84,9 @@ Reserva
     dataReserva Day
     status StatusReserva
     deriving Show
+
+Sessao
+    userId UserId OnDeleteCascade
+    tokenHash Text
+    expiraEm UTCTime
+    UniqueSessaoToken tokenHash

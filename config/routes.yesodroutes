@@ -56,3 +56,6 @@
 /reservas ReservasR GET POST
 !/reservas/nova ReservaNovaR GET
 /reservas/#ReservaId/cancelar ReservaCancelarR POST
+
+/api/sessoes ApiSessoesR POST DELETE
+/api/eu ApiEuR GET
