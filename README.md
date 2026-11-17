@@ -47,6 +47,18 @@ echo "$SENHA" | stack exec biblioteca-usuario -- maria   # em script, a senha ve
 - Recarregar ao editar: `stack install yesod-bin` e depois `stack exec -- yesod devel`.
 - Outro banco: defina `YESOD_PGHOST`, `YESOD_PGPORT`, `YESOD_PGUSER`, `YESOD_PGPASS` e `YESOD_PGDATABASE` (veja `.env.example`).
 
+### Frontend novo (`web/`, em construção)
+
+O frontend em Next.js fala com a API do Yesod pelo servidor (BFF): o navegador só conversa com o Next.js, e o token da sessão fica num cookie `httpOnly`. Com a API rodando em `localhost:3000`:
+
+```bash
+cd web
+npm ci
+npm run dev                   # http://localhost:3001 (API_URL aponta para a API; padrão http://localhost:3000)
+```
+
+Por enquanto ele tem o login, o layout da área do sócio (`/`) e o do bibliotecário (`/painel`); as telas com dados chegam junto com os endpoints da API.
+
 ## Banco de dados
 
 Nove tabelas do domínio, definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. (`user` e `email` vêm do scaffold do Yesod e não são usadas pelo domínio.)
