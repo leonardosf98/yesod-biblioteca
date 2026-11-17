@@ -25,6 +25,7 @@ spec :: Spec
 spec = withApp $ do
     describe "CRUD de categoria" $ do
         it "cadastra uma categoria com descrição" $ do
+            entrar
             get CategoriaNovaR
             enviarCategoria CategoriasR "Poesia" "Versos e poemas"
             statusIs 303
@@ -32,6 +33,7 @@ spec = withApp $ do
             assertEq "descrição gravada" [Just "Versos e poemas"] (map (categoriaDescricao . entityVal) categorias)
 
         it "recusa nome repetido no cadastro" $ do
+            entrar
             _ <- runDB $ insert $ Categoria "Poesia" Nothing
             get CategoriaNovaR
             enviarCategoria CategoriasR "Poesia" ""
@@ -39,6 +41,7 @@ spec = withApp $ do
             htmlAnyContain ".alert-danger" "Já existe uma categoria com esse nome."
 
         it "recusa renomear para um nome que já existe" $ do
+            entrar
             _ <- runDB $ insert $ Categoria "Poesia" Nothing
             outraId <- runDB $ insert $ Categoria "Contos" Nothing
             get (CategoriaEditarR outraId)
@@ -48,6 +51,7 @@ spec = withApp $ do
             assertEq "nome mantido" "Contos" (categoriaNome outra)
 
         it "exclui categoria sem livros" $ do
+            entrar
             categoriaId <- runDB $ insert $ Categoria "Vazia" Nothing
             excluir categoriaId
             statusIs 303
@@ -55,6 +59,7 @@ spec = withApp $ do
             assertEq "categoria removida" 0 restante
 
         it "não exclui categoria com livros" $ do
+            entrar
             runDB popular
             categorias <- runDB $ selectList [CategoriaNome ==. "Romance"] []
             categoriaId <- case categorias of

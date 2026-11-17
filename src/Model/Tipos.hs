@@ -11,3 +11,7 @@ derivePersistField "EstadoExemplar"
 data StatusReserva = Ativa | Atendida | Cancelada
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 derivePersistField "StatusReserva"
+
+data Papel = PapelBibliotecario | PapelSocio
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+derivePersistField "Papel"

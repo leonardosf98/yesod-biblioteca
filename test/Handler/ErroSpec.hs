@@ -25,6 +25,7 @@ spec = do
             htmlAnyContain "h1" "Página não encontrada"
 
         it "mostra as datas dos empréstimos como dd/mm/aaaa" $ do
+            entrar
             runDB popular
             emprestimos <- runDB $ selectList [] []
             primeira <- maybe (error "sem empréstimos") (return . emprestimoDataEmprestimo . entityVal) (headMay emprestimos)

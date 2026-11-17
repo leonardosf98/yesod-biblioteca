@@ -17,6 +17,7 @@ socioPorEmail email = runDB (getBy (UniqueSocioEmail email)) >>= maybe (error "s
 spec :: Spec
 spec = withApp $ describe "Reservas pela interface" $ do
     it "cria reserva pelo formulário e lista entre as ativas" $ do
+        entrar
         runDB popular
         livroId <- livroPorTitulo "Fundação"
         socioId <- socioPorEmail "bruno@example.com"
@@ -32,6 +33,7 @@ spec = withApp $ describe "Reservas pela interface" $ do
         htmlAnyContain "td a" "Bruno Lima"
 
     it "cancela reserva pela listagem" $ do
+        entrar
         runDB popular
         reservas <- runDB $ selectList [ReservaStatus ==. Ativa] []
         reservaId <- maybe (error "reserva") (return . entityKey) (headMay reservas)
@@ -45,6 +47,7 @@ spec = withApp $ describe "Reservas pela interface" $ do
         assertEq "cancelada" Cancelada status
 
     it "avisa a fila de reservas ao devolver" $ do
+        entrar
         runDB popular
         exemplar <- runDB (getBy (UniqueCodigo "FU-001")) >>= maybe (error "exemplar") return
         abertos <- runDB $ selectList [EmprestimoExemplarId ==. entityKey exemplar, EmprestimoDataDevolucao ==. Nothing] []

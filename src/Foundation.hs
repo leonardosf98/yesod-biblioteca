@@ -22,7 +22,8 @@ import Control.Monad.Logger (LogSource)
 import Yesod.Auth.Dummy
 import Yesod.Form.I18n.Portuguese (portugueseFormMessage)
 
-import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
+import Yesod.Auth.HashDB    (authHashDBWithForm)
+import Yesod.Auth.Message   (AuthMessage (InvalidLogin), portugueseMessage)
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
@@ -106,6 +107,8 @@ instance Yesod App where
         mensagens <- getMessages
 
         mcurrentRoute <- getCurrentRoute
+        usuario <- maybeAuth
+        let bibliotecario = maybe False ((== PapelBibliotecario) . userPapel . entityVal) usuario
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
@@ -140,17 +143,27 @@ instance Yesod App where
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Sócios"
                     , menuItemRoute = SociosR
-                    , menuItemAccessCallback = True
+                    , menuItemAccessCallback = bibliotecario
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Empréstimos"
                     , menuItemRoute = EmprestimosR
-                    , menuItemAccessCallback = True
+                    , menuItemAccessCallback = bibliotecario
                     }
                 , NavbarLeft $ MenuItem
                     { menuItemLabel = "Reservas"
                     , menuItemRoute = ReservasR
-                    , menuItemAccessCallback = True
+                    , menuItemAccessCallback = bibliotecario
+                    }
+                , NavbarRight $ MenuItem
+                    { menuItemLabel = "Entrar"
+                    , menuItemRoute = AuthR LoginR
+                    , menuItemAccessCallback = isNothing usuario
+                    }
+                , NavbarRight $ MenuItem
+                    { menuItemLabel = "Sair"
+                    , menuItemRoute = AuthR LogoutR
+                    , menuItemAccessCallback = isJust usuario
                     }
                 ]
 
@@ -183,12 +196,10 @@ instance Yesod App where
         -> Bool       -- ^ Whether or not this is a "write" request.
         -> Handler AuthResult
     -- Routes not requiring authentication.
-    isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
-    isAuthorized FaviconR _ = return Authorized
-    isAuthorized RobotsR _ = return Authorized
-    isAuthorized (StaticR _) _ = return Authorized
-    isAuthorized _ _ = return Authorized
+    isAuthorized rota escrita
+        | rotaLivre rota = return Authorized
+        | not escrita && catalogo rota = return Authorized
+        | otherwise = exigirPapel PapelBibliotecario
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -240,6 +251,54 @@ paginaDeErro titulo explicacao = selectRep $ provideRep $ defaultLayout $ do
     <h1>#{titulo}
     <p .lead>#{explicacao}
     <a .btn .btn-primary href=@{HomeR}>Voltar ao início
+|]
+
+rotaLivre :: Route App -> Bool
+rotaLivre rota = case rota of
+    AuthR _ -> True
+    HomeR -> True
+    FaviconR -> True
+    RobotsR -> True
+    StaticR _ -> True
+    _ -> False
+
+catalogo :: Route App -> Bool
+catalogo rota = case rota of
+    LivrosR -> True
+    LivroR _ -> True
+    AutoresR -> True
+    AutorR _ -> True
+    EditorasR -> True
+    EditoraR _ -> True
+    CategoriasR -> True
+    CategoriaR _ -> True
+    _ -> False
+
+exigirPapel :: Papel -> Handler AuthResult
+exigirPapel papel = do
+    usuario <- maybeAuth
+    return $ case usuario of
+        Nothing -> AuthenticationRequired
+        Just (Entity _ u)
+            | userPapel u == papel -> Authorized
+            | otherwise -> Unauthorized "Acesso restrito ao bibliotecário."
+
+formularioLogin :: Route App -> Widget
+formularioLogin acao = do
+    token <- reqToken <$> getRequest
+    [whamlet|
+<div .pagina-login>
+    <h1>Entrar
+    <form #form-login method=post action=@{acao}>
+        $maybe valor <- token
+            <input type=hidden name=#{defaultCsrfParamName} value=#{valor}>
+        <div .form-group>
+            <label for=login-usuario>Usuário
+            <input .form-control #login-usuario name=username autofocus required>
+        <div .form-group>
+            <label for=login-senha>Senha
+            <input .form-control #login-senha type=password name=password required>
+        <button .btn .btn-primary type=submit>Entrar
 |]
 
 -- Define breadcrumbs.
@@ -320,30 +379,20 @@ instance YesodAuth App where
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
 
-    authenticate :: (MonadHandler m, HandlerSite m ~ App)
-                 => Creds App -> m (AuthenticationResult App)
     authenticate creds = liftHandler $ runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
-        case x of
-            Just (Entity uid _) -> return $ Authenticated uid
-            Nothing -> Authenticated <$> insert User
-                { userIdent = credsIdent creds
-                , userPassword = Nothing
-                }
+        return $ case x of
+            Just (Entity uid _) -> Authenticated uid
+            Nothing -> UserError InvalidLogin
 
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
+    authPlugins app = authHashDBWithForm formularioLogin (Just . UniqueUser) : extraAuthPlugins
         -- Enable authDummy login if enabled.
         where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
--- | Access function to determine if a user is logged in.
-isAuthenticated :: Handler AuthResult
-isAuthenticated = do
-    muid <- maybeAuthId
-    return $ case muid of
-        Nothing -> Unauthorized "You must login to access this page"
-        Just _ -> Authorized
+    renderAuthMessage :: App -> [Text] -> AuthMessage -> Text
+    renderAuthMessage _ _ = portugueseMessage
 
 instance YesodAuthPersist App
 

@@ -17,6 +17,7 @@ spec :: Spec
 spec = withApp $ do
     describe "CRUD de autor" $ do
         it "cadastra um autor pelo formulário e mostra na listagem" $ do
+            entrar
             get AutorNovoR
             statusIs 200
             enviarAutor AutoresR "Clarice Lispector" "Brasileira"
@@ -27,6 +28,7 @@ spec = withApp $ do
             htmlAnyContain "td a" "Clarice Lispector"
 
         it "recusa nome em branco e não grava nada" $ do
+            entrar
             get AutorNovoR
             enviarAutor AutoresR "   " ""
             statusIs 200
@@ -35,6 +37,7 @@ spec = withApp $ do
             assertEq "nenhum autor gravado" 0 autores
 
         it "atualiza um autor existente" $ do
+            entrar
             autorId <- runDB $ insert $ Autor "Jorje Amado" Nothing
             get (AutorEditarR autorId)
             statusIs 200
@@ -44,6 +47,7 @@ spec = withApp $ do
             assertEq "nome corrigido" "Jorge Amado" (autorNome autor)
 
         it "exclui um autor sem livros" $ do
+            entrar
             autorId <- runDB $ insert $ Autor "Autor avulso" Nothing
             get (AutorR autorId)
             request $ do
@@ -55,6 +59,7 @@ spec = withApp $ do
             assertEq "autor removido" 0 restante
 
         it "não exclui autor que tem livros" $ do
+            entrar
             runDB popular
             autores <- runDB $ selectList [AutorNome ==. "Machado de Assis"] []
             autorId <- case autores of
@@ -72,6 +77,7 @@ spec = withApp $ do
             htmlAnyContain ".alert-danger" "ligado a 2 livro(s)"
 
         it "recusa POST sem token CSRF" $ do
+            entrar
             autorId <- runDB $ insert $ Autor "Protegido" Nothing
             request $ do
                 setMethod "POST"

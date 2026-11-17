@@ -28,6 +28,7 @@ spec :: Spec
 spec = withApp $ do
     describe "Exemplares" $ do
         it "cadastra exemplar com código informado e disponível" $ do
+            entrar
             livroId <- criarLivro
             get (ExemplarNovoR livroId)
             enviarExemplar (ExemplaresR livroId) "ABC-1" "1"
@@ -37,6 +38,7 @@ spec = withApp $ do
             assertEq "disponível" True (exemplarDisponivel exemplar)
 
         it "gera código quando fica em branco" $ do
+            entrar
             livroId <- criarLivro
             get (ExemplarNovoR livroId)
             enviarExemplar (ExemplaresR livroId) "" "1"
@@ -48,6 +50,7 @@ spec = withApp $ do
             return ()
 
         it "recusa código repetido" $ do
+            entrar
             livroId <- criarLivro
             runDB $ insert_ (Exemplar livroId "ABC-1" Bom True)
             get (ExemplarNovoR livroId)
@@ -56,6 +59,7 @@ spec = withApp $ do
             htmlAnyContain ".alert-danger" "Já existe um exemplar com esse código."
 
         it "altera o estado mantendo o código quando fica em branco" $ do
+            entrar
             livroId <- criarLivro
             exemplarId <- runDB $ insert (Exemplar livroId "ABC-1" Bom True)
             get (ExemplarEditarR exemplarId)
@@ -66,6 +70,7 @@ spec = withApp $ do
             assertEq "agora danificado" Danificado (exemplarEstado exemplar)
 
         it "exclui exemplar sem empréstimos" $ do
+            entrar
             livroId <- criarLivro
             exemplarId <- runDB $ insert (Exemplar livroId "ABC-1" Bom True)
             get (ExemplarEditarR exemplarId)
@@ -78,6 +83,7 @@ spec = withApp $ do
             assertEq "removido" 0 restante
 
         it "não exclui exemplar com empréstimos" $ do
+            entrar
             runDB popular
             Entity exemplarId _ <- exemplarPorCodigo "DC-001"
             get (ExemplarEditarR exemplarId)

@@ -73,23 +73,22 @@ getTables = do
 
     return $ map unSingle tables
 
--- | Authenticate as a user. This relies on the `auth-dummy-login: true` flag
--- being set in test-settings.yaml, which enables dummy authentication in
--- Foundation.hs
 authenticateAs :: Entity User -> YesodExample App ()
 authenticateAs (Entity _ u) = do
+    get (AuthR LoginR)
     request $ do
         setMethod "POST"
+        addToken_ "#form-login"
         addPostParam "ident" $ userIdent u
         setUrl $ AuthR $ PluginR "dummy" []
 
--- | Create a user.  The dummy email entry helps to confirm that foreign-key
--- checking is switched off in wipeDB for those database backends which need it.
-createUser :: Text -> YesodExample App (Entity User)
-createUser ident = runDB $ do
+criarUsuario :: Papel -> Text -> YesodExample App (Entity User)
+criarUsuario papel ident = runDB $ do
     user <- insertEntity User
         { userIdent = ident
         , userPassword = Nothing
+        , userPapel = papel
+        , userSocioId = Nothing
         }
     _ <- insert Email
         { emailEmail = ident
@@ -97,3 +96,9 @@ createUser ident = runDB $ do
         , emailVerkey = Nothing
         }
     return user
+
+createUser :: Text -> YesodExample App (Entity User)
+createUser = criarUsuario PapelBibliotecario
+
+entrar :: YesodExample App ()
+entrar = createUser "bibliotecario" >>= authenticateAs

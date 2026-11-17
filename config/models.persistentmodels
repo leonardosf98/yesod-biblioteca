@@ -4,6 +4,8 @@
 User
     ident Text
     password Text Maybe
+    papel Papel default='PapelSocio'
+    socioId SocioId Maybe
     UniqueUser ident
     deriving Typeable
 Email
