@@ -59,4 +59,4 @@ interpretarCep valor = do
         <*> o .:? "bairro"
         <*> o .:? "localidade"
         <*> o .:? "uf"
-    naoVazio campo = mfilter (not . T.null . T.strip) campo
+    naoVazio = mfilter (not . T.null . T.strip)
