@@ -42,8 +42,7 @@ listar parametros = do
         addRequestHeader ("Accept", "application/json")
         forM_ parametros (uncurry addGetParam)
     statusIs 200
-    corpo <- respostaJson
-    return $ fromMaybe [] $ parseMaybe lerLivros corpo
+    fromMaybe [] . parseMaybe lerLivros <$> respostaJson
   where
     lerLivros :: Value -> Parser [(Text, Int, Int, [Text])]
     lerLivros = withObject "catalogo" $ \o -> o .: "livros" >>= mapM (withObject "livro" $ \l ->

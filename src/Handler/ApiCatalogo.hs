@@ -108,7 +108,7 @@ contagensDosLivros ids = do
         ]
 
 contagemDe :: LivroId -> Map LivroId Contagem -> Contagem
-contagemDe livroId = Map.findWithDefault (Contagem 0 0) livroId
+contagemDe = Map.findWithDefault (Contagem 0 0)
 
 categoriaJson :: CategoriaId -> Maybe Text -> Value
 categoriaJson k nome = object ["id" .= k, "nome" .= nome]
