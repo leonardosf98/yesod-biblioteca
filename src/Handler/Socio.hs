@@ -3,12 +3,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Handler.Socio where
 
-import Data.Char (isDigit)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Form.Comum
 import Import
-import Integracao.ViaCep
+import Regras.Socio (completarEndereco, somenteDigitos)
 
 data DadosSocio = DadosSocio
     { dadosNome :: Text
@@ -27,13 +26,7 @@ socioForm atual = renderizar $ DadosSocio
     <*> aopt (textoLimitado 10) "Número" (socioNumero <$> atual)
 
 digitos :: [Int] -> Text -> Field Handler Text
-digitos tamanhos erro = check validar textField
-  where
-    validar texto
-        | T.length limpo `elem` tamanhos && T.all isDigit limpo = Right limpo
-        | otherwise = Left erro
-      where
-        limpo = T.filter (`notElem` (" -()." :: String)) texto
+digitos tamanhos erro = checkM (return . maybe (Left erro) Right . somenteDigitos tamanhos) textField
 
 paraSocio :: DadosSocio -> Socio
 paraSocio dados = Socio
@@ -49,27 +42,9 @@ paraSocio dados = Socio
     }
 
 resolverEndereco :: Maybe Socio -> DadosSocio -> Handler (Either Text Socio)
-resolverEndereco anterior dados = case dadosCep dados of
-    Nothing -> return (Right base)
-    Just cep
-        | Just cep == (anterior >>= socioCep) -> return (Right (manterEndereco anterior))
-        | otherwise -> do
-            manager <- getsYesod appHttpManager
-            fmap comEndereco <$> liftIO (buscarCep manager cep)
-  where
-    base = paraSocio dados
-    manterEndereco socio = base
-        { socioLogradouro = socio >>= socioLogradouro
-        , socioBairro = socio >>= socioBairro
-        , socioCidade = socio >>= socioCidade
-        , socioUf = socio >>= socioUf
-        }
-    comEndereco endereco = base
-        { socioLogradouro = enderecoLogradouro endereco
-        , socioBairro = enderecoBairro endereco
-        , socioCidade = Just (enderecoCidade endereco)
-        , socioUf = Just (enderecoUf endereco)
-        }
+resolverEndereco anterior dados = do
+    manager <- getsYesod appHttpManager
+    liftIO $ completarEndereco manager anterior (paraSocio dados)
 
 emailEmUso :: Text -> Maybe SocioId -> Handler Bool
 emailEmUso email proprio = do

@@ -113,6 +113,8 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | GET | `/api/balcao/exemplares/:codigo` | bibliotecário | Exemplar pelo código (leitor ou teclado), com o livro e o empréstimo em aberto, se houver |
 | POST | `/api/emprestimos` | bibliotecário | Corpo `{"socioId", "exemplarId"}`; empréstimo de 14 dias no balcão; 409 com o motivo (pendência, limite, exemplar indisponível ou perdido) |
 | POST | `/api/emprestimos/:id/devolucao` | bibliotecário | Registra a devolução e devolve `multaCentavos` |
+| POST | `/api/socios` | bibliotecário | Corpo `{"nome", "email", "telefone", "cep", "numero"}`; com CEP, o endereço vem do ViaCEP; e-mail único |
+| GET / PUT / DELETE | `/api/socios/:id` | bibliotecário | Detalhe com empréstimos, reservas, pendências e se a conta do app está ativa; trocar o e-mail troca o login do app; só exclui sócio sem histórico (e apaga a conta do app junto) |
 | GET | `/api/socios?busca=` | bibliotecário | Até 20 sócios por nome ou e-mail, com `emUso`, `pendencias` e `contaAtiva` |
 | GET / POST | `/api/autores`, `/api/editoras`, `/api/categorias` | leitura pública, escrita do bibliotecário | Lista com a contagem de `livros`; criação com validação por campo (`400 {"erro", "campos"}`) e nome único para editora e categoria (409) |
 | PUT / DELETE | `/api/autores/:id`, `/api/editoras/:id`, `/api/categorias/:id` | bibliotecário | Edita ou exclui; 409 ao excluir algo ligado a livros |
