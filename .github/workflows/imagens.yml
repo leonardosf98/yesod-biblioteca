@@ -1,0 +1,71 @@
+name: Imagens
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: imagens-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRO: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  api:
+    name: Imagem da API
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Instalar libpq-dev
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
+      - uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
+        with:
+          enable-stack: true
+          stack-no-global: true
+          stack-version: latest
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.stack
+            .stack-work
+          key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', 'stack.yaml.lock', 'package.yaml') }}
+          restore-keys: stack-${{ runner.os }}-
+
+      - name: Build
+        run: stack build --copy-bins --local-bin-path dist
+
+      - name: Montar imagem
+        run: docker build -f docker/api.Dockerfile -t "$REGISTRO/biblioteca-api:${GITHUB_SHA::7}" -t "$REGISTRO/biblioteca-api:latest" .
+
+      - name: Conferir bibliotecas dinâmicas
+        run: |
+          docker run --rm --entrypoint sh "$REGISTRO/biblioteca-api:latest" -c 'for b in /usr/local/bin/biblioteca*; do ldd "$b"; done' | tee ldd.txt
+          if grep -q "not found" ldd.txt; then exit 1; fi
+
+      - name: Publicar
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push --all-tags "$REGISTRO/biblioteca-api"
+
+  web:
+    name: Imagem do frontend
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Montar imagem
+        run: docker build -t "$REGISTRO/biblioteca-web:${GITHUB_SHA::7}" -t "$REGISTRO/biblioteca-web:latest" web
+
+      - name: Publicar
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push --all-tags "$REGISTRO/biblioteca-web"
