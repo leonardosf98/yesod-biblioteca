@@ -2,37 +2,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Handler.ApiSessaoSpec (spec) where
 
-import Data.Aeson (Value, decode, encode, object, withObject, (.:), (.=))
-import Data.Aeson.Types (parseMaybe)
+import ApiTeste
 import Data.Time (addUTCTime)
-import Network.Wai.Test (simpleBody)
 import Sessao (hashToken)
 import TestImport
 import Usuario (salvarBibliotecario)
-
-entrarNaApi :: Text -> Text -> YesodExample App ()
-entrarNaApi login senha = request $ do
-    setMethod "POST"
-    setUrl ApiSessoesR
-    addRequestHeader ("Accept", "application/json")
-    addRequestHeader ("Content-Type", "application/json")
-    setRequestBody $ encode $ object ["login" .= login, "senha" .= senha]
-
-tokenDaResposta :: YesodExample App Text
-tokenDaResposta = do
-    resposta <- getResponse
-    let token = do
-            corpo <- resposta
-            valor <- decode (simpleBody corpo) :: Maybe Value
-            parseMaybe (withObject "sessao" (.: "token")) valor
-    maybe (liftIO $ expectationFailure "resposta sem token" >> return "") return token
-
-comToken :: Maybe Text -> Route App -> ByteString -> YesodExample App ()
-comToken token rota metodo = request $ do
-    setMethod metodo
-    setUrl rota
-    addRequestHeader ("Accept", "application/json")
-    forM_ token $ \t -> addRequestHeader ("Authorization", "Bearer " <> encodeUtf8 t)
 
 spec :: Spec
 spec = withApp $ describe "API de sessões" $ do

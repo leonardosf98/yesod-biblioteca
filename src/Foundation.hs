@@ -287,6 +287,7 @@ rotaLivre rota = case rota of
     RobotsR -> True
     StaticR _ -> True
     ApiSessoesR -> True
+    ApiAtivacaoR -> True
     _ -> False
 
 catalogo :: Route App -> Bool

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Marca } from "@/components/marca";
 import { inicioDoPapel, usuarioAtual } from "@/lib/api";
@@ -21,6 +22,10 @@ export default async function PaginaEntrar() {
         <div className="rounded-2xl border border-borda bg-superficie p-6 shadow-sm">
           <FormularioLogin />
         </div>
+        <p className="text-center text-sm text-texto-suave">
+          Primeiro acesso ou esqueceu a senha?{" "}
+          <Link href="/ativar" className="font-medium text-marca hover:underline">Ative sua conta</Link>
+        </p>
       </div>
     </main>
   );

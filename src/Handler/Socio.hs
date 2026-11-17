@@ -129,6 +129,7 @@ getSocioR socioId = do
             lookup livroId titulos
         codigoDoExemplar exemplarId = maybe "—" fst (lookup exemplarId codigos)
         tituloDoLivro livroId = fromMaybe "—" (lookup livroId titulos)
+    token <- reqToken <$> getRequest
     defaultLayout $ do
         setTitle (toHtml (socioNome socio))
         $(widgetFile "socios/detalhe")

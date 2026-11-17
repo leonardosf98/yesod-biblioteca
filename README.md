@@ -99,8 +99,12 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | POST | `/api/sessoes` | todos | Corpo `{"login", "senha"}`. 201 com `token`, `expiraEm` (7 dias) e `usuario`; 401 se login ou senha não conferem |
 | DELETE | `/api/sessoes` | com token | 204; o token deixa de valer |
 | GET | `/api/eu` | com token | `{"login", "papel"}`; 401 sem token válido |
+| POST | `/api/socios/:id/codigo-ativacao` | bibliotecário | 201 com `codigo` (formato `ABCD-2345`) e `expiraEm` (7 dias); um código novo invalida o anterior |
+| POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 
-O banco guarda só o hash SHA-256 do token (tabela `sessao`), nunca o token em si.
+O banco guarda só o hash SHA-256 do token (tabela `sessao`) e do código de ativação (tabela `codigo_ativacao`), nunca o valor em si. O código é de uso único e fica bloqueado depois de 5 tentativas erradas.
+
+No site antigo, o bibliotecário também gera o código pelo botão **Gerar código de ativação** na página do sócio; o sócio ativa em `/ativar` no frontend novo.
 
 ## Integração com APIs
 

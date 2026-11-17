@@ -11,6 +11,12 @@
     <dt>Endereço
     <dd .endereco>#{fromMaybe "—" (enderecoCompleto socio)}
 
+<form .form-codigo method=post action=@{SocioCodigoR socioId}>
+    $maybe valor <- token
+        <input type=hidden name=#{defaultCsrfParamName} value=#{valor}>
+    <button .btn .btn-default type=submit>Gerar código de ativação
+    <span .help-block>O sócio usa o código para criar a senha do app. Um código novo invalida o anterior.
+
 <h3>Empréstimos
 $if null emprestimos
     <p .text-muted>Nenhum empréstimo.
