@@ -72,3 +72,8 @@
 /api/livros/#LivroId/reservas ApiLivroReservasR POST
 /api/emprestimos/#EmprestimoId/pagamento-multa ApiPagamentoMultaR POST
 /emprestimos/#EmprestimoId/pagamento EmprestimoPagamentoR POST
+/api/painel ApiPainelR GET
+/api/balcao/exemplares/#Text ApiExemplarCodigoR GET
+/api/emprestimos ApiEmprestimosR POST
+/api/emprestimos/#EmprestimoId/devolucao ApiDevolucaoR POST
+/api/socios ApiSociosR GET
