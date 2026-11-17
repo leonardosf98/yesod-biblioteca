@@ -130,6 +130,8 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         Entity pedidoId _ <- pedidoUnico
         agora <- liftIO getCurrentTime
         runDB $ update pedidoId [PedidoLimiteRetirada =. addUTCTime (-1) agora]
+        comToken Nothing (ApiLivroR (livro c)) "GET"
+        bodyContains "\"disponiveis\":1"
         comToken (Just (token c)) ApiEuEmprestimosR "GET"
         statusIs 200
         bodyContains "\"pedidos\":[]"

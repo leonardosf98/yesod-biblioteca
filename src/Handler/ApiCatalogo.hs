@@ -8,6 +8,7 @@ module Handler.ApiCatalogo
 import Import
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
+import Regras.Pedido (expirarPedidos)
 import Control.Monad (mfilter)
 
 data Contagem = Contagem { disponiveis :: Int, fila :: Int }
@@ -16,7 +17,9 @@ getApiLivrosR :: Handler Value
 getApiLivrosR = do
     busca <- mfilter (not . null) . fmap T.strip <$> lookupGetParam "busca"
     categoriaFiltro <- (>>= fromPathPiece) <$> lookupGetParam "categoria"
+    agora <- liftIO getCurrentTime
     (livros, categorias, autoresPorLivro, contagens) <- runDB $ do
+        expirarPedidos agora
         porAutor <- case busca of
             Nothing -> return []
             Just texto -> do
@@ -52,7 +55,9 @@ getApiLivrosR = do
 
 getApiLivroR :: LivroId -> Handler Value
 getApiLivroR livroId = do
+    agora <- liftIO getCurrentTime
     (livro, autores, editora, categoria, exemplares, contagens) <- runDB $ do
+        expirarPedidos agora
         livro <- get404 livroId
         autores <- autoresDosLivros [livroId]
         editora <- maybe (return Nothing) get (livroEditoraId livro)
