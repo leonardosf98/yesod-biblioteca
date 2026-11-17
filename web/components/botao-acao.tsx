@@ -6,17 +6,22 @@ import { cn } from "@/lib/cn";
 
 export type ResultadoAcao = { erro?: string; ok?: string };
 
-export function BotaoAcao({ acao, rotulo, pendente, variante, tamanho, className }: {
+export function BotaoAcao({ acao, rotulo, pendente, variante, tamanho, className, confirmar }: {
   acao: (anterior: ResultadoAcao) => Promise<ResultadoAcao>;
   rotulo: React.ReactNode;
   pendente: string;
   variante?: "primario" | "contorno" | "fantasma";
   tamanho?: "md" | "lg";
   className?: string;
+  confirmar?: string;
 }) {
   const [estado, executar, enviando] = useActionState(acao, {});
   return (
-    <form action={executar} className={cn("flex flex-col gap-2", className)}>
+    <form
+      action={executar}
+      onSubmit={(evento) => { if (confirmar && !window.confirm(confirmar)) evento.preventDefault(); }}
+      className={cn("flex flex-col gap-2", className)}
+    >
       <Button type="submit" variante={variante} tamanho={tamanho} disabled={enviando}>
         {enviando ? pendente : rotulo}
       </Button>
