@@ -52,8 +52,8 @@ Cada pessoa abre a própria branch (`feat/<frente>`) e faz PR para `main`, commi
 - [x] 0.5 `.gitignore` (`.stack-work/`, `static/tmp/`, `.env`), mais um `.env.example`
 - [x] 0.6 Limpar o scaffold: remover o `Comment` e a página de exemplo e manter o `User`, se usarmos autenticação
 - [x] 0.7 Primeiro commit e configuração da proteção da `main` (PR obrigatório)
-- [ ] 0.8 CI no GitHub Actions: `stack build` + `stack test` com Postgres como service e cache de `~/.stack`
-- [ ] 0.9 Pacote de evidências por PR com `leonardosf98/pr-risk-tier@v1` e regras em `.github/pr-risk-tier.toml` (docs = 0, padrão = 1, modelo/rotas/integrações = 2, Foundation/config/build/CI = 3)
+- [x] 0.8 CI no GitHub Actions: `stack build` + `stack test` com Postgres como service e cache de `~/.stack`
+- [x] 0.9 Pacote de evidências por PR com `leonardosf98/pr-risk-tier@v1` e regras em `.github/pr-risk-tier.toml` (docs = 0, padrão = 1, modelo/rotas/integrações = 2, Foundation/config/build/CI = 3)
 
 ## Fase 1 — Modelo de dados
 - [x] 1.1 Escrever as 9 entidades em `config/models.persistentmodels`, com `UniqueIsbn`, `UniqueSocioEmail`, `UniqueCodigo` e PK composta em `LivroAutor` (`UniqueEmail` já é do scaffold)
@@ -138,7 +138,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 11.3 Como executar: dependências, `docker compose up -d`, `stack build`, `stack exec -- yesod devel`
 - [x] 11.4 Estrutura do banco: as 9 tabelas em uma linha cada
 - [x] 11.5 APIs: Open Library e ViaCEP, para que servem e onde são usadas
-- [ ] 11.6 Integrantes e principais contribuições (tabela pronta no README; falta o grupo preencher)
+- [x] 11.6 Integrante: trabalho individual
 - [ ] 11.7 Link da aplicação hospedada (se houver)
 
 ## Fase 12 — Entrega e preparação para a arguição (8 pts)
@@ -153,3 +153,18 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
   - [ ] regras do empréstimo e por que elas rodam em transação
 - [ ] 12.4 Treinar uma alteração ao vivo (ex.: adicionar um campo numa entidade e exibi-lo na listagem)
 - [ ] 12.5 Enviar o link do repositório (e do deploy) ao professor
+
+## Fase 13 — Frontend Next.js, área do sócio e repaginação
+
+Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend-nextjs.md). Ponto de partida estável: tag `v1.0.0`.
+
+- [ ] 13.1 CI completo: hlint, Semgrep, auditoria de dependências pela OSV, testes e pr-risk-tier
+- [ ] 13.2 Papéis (bibliotecário e sócio) e sessões por token na API
+- [ ] 13.3 API do catálogo
+- [ ] 13.4 Pedido de empréstimo pelo sócio: retirada, expiração e renovação
+- [ ] 13.5 API de cadastros e importação por ISBN
+- [ ] 13.6 Esqueleto do `web/` em Next.js com design system e login via BFF
+- [ ] 13.7 Área do sócio
+- [ ] 13.8 Painel do bibliotecário
+- [ ] 13.9 Deploy: API no Lightsail, Next.js na Vercel, banco no Supabase
+- [ ] 13.10 Remover as páginas Hamlet e atualizar o README para a Opção B

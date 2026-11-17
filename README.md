@@ -92,11 +92,8 @@ templates/                       Hamlet e Lucius por entidade
 test/                            testes de handlers, regras e integrações
 ```
 
-## Integrantes
+## Integrante
 
-| Nome | Principais contribuições |
-|---|---|
-| Leonardo (`leonardosf98`) | _a preencher_ |
-| _a preencher_ | |
+Trabalho individual: Leonardo (`leonardosf98`) — modelagem, backend Yesod, integrações, testes e documentação.
 
 O planejamento por fases está no [ROADMAP.md](ROADMAP.md).
