@@ -201,6 +201,7 @@ instance Yesod App where
         | rotaLivre rota = return Authorized
         | not escrita && catalogo rota = return Authorized
         | rota == ApiEuR = exigirLogin
+        | rotaDoSocio rota = exigirPapel PapelSocio
         | otherwise = exigirPapel PapelBibliotecario
 
     -- This function creates static content files in the static folder
@@ -311,7 +312,16 @@ exigirPapel papel = do
         Nothing -> AuthenticationRequired
         Just (Entity _ u)
             | userPapel u == papel -> Authorized
-            | otherwise -> Unauthorized "Acesso restrito ao bibliotecário."
+            | otherwise -> Unauthorized $ case papel of
+                PapelBibliotecario -> "Acesso restrito ao bibliotecário."
+                PapelSocio -> "Acesso restrito a sócios."
+
+rotaDoSocio :: Route App -> Bool
+rotaDoSocio rota = case rota of
+    ApiLivroPedidosR _ -> True
+    ApiEuPedidoR _ -> True
+    ApiEuEmprestimosR -> True
+    _ -> False
 
 exigirLogin :: Handler AuthResult
 exigirLogin = maybe AuthenticationRequired (const Authorized) <$> maybeAuthId

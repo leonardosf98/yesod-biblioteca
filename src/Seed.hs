@@ -48,9 +48,9 @@ popular = do
             Nothing Nothing Nothing Nothing Nothing Nothing
 
         insertMany_
-            [ Emprestimo dc1 ana (addDays (-20) dia) (addDays (-6) dia) Nothing 0
-            , Emprestimo br1 bruno (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 0
-            , Emprestimo fu1 bruno (addDays (-3) dia) (addDays 11 dia) Nothing 0
+            [ Emprestimo dc1 ana (addDays (-20) dia) (addDays (-6) dia) Nothing 0 0 Nothing
+            , Emprestimo br1 bruno (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 0 0 Nothing
+            , Emprestimo fu1 bruno (addDays (-3) dia) (addDays 11 dia) Nothing 0 0 Nothing
             ]
 
         insert_ $ Reserva fundacao ana dia Ativa

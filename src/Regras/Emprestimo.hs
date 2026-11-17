@@ -67,6 +67,8 @@ realizarEmprestimo socioId exemplarId dia = do
                             , emprestimoDataPrevista = addDays prazoDias dia
                             , emprestimoDataDevolucao = Nothing
                             , emprestimoMultaCentavos = 0
+                            , emprestimoRenovacoes = 0
+                            , emprestimoMultaPagaEm = Nothing
                             }
 
 registrarDevolucao :: MonadIO m => EmprestimoId -> Day -> ReaderT SqlBackend m (Either Text Int)

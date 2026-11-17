@@ -76,6 +76,8 @@ Emprestimo
     dataPrevista Day
     dataDevolucao Day Maybe
     multaCentavos Int default=0
+    renovacoes Int default=0
+    multaPagaEm Day Maybe
     deriving Show
 
 Reserva
@@ -97,3 +99,13 @@ CodigoAtivacao
     expiraEm UTCTime
     tentativas Int default=0
     UniqueCodigoAtivacaoSocio socioId
+
+Pedido
+    exemplarId ExemplarId
+    socioId SocioId
+    codigo Text
+    criadoEm UTCTime
+    limiteRetirada UTCTime
+    status StatusPedido
+    emprestimoId EmprestimoId Maybe
+    UniquePedidoCodigo codigo

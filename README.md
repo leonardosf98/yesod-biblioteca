@@ -102,7 +102,13 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | POST | `/api/socios/:id/codigo-ativacao` | bibliotecário | 201 com `codigo` (formato `ABCD-2345`) e `expiraEm` (7 dias); um código novo invalida o anterior |
 | GET | `/api/livros?busca=&categoria=` | público | `livros` (id, título, ano, capa, autores, categoria, `disponiveis`, `fila`) e `categorias`; a busca procura no título, no nome do autor e no ISBN, sem diferenciar maiúsculas |
 | GET | `/api/livros/:id` | público | Detalhe com sinopse, editora, autores e exemplares (sem os perdidos); 404 em JSON se não existir |
+| POST | `/api/livros/:id/pedidos` | sócio | Separa um exemplar e devolve `codigo` e `limiteRetirada` (48 h); 409 com o motivo se houver multa não paga, atraso, limite de 3 livros, livro repetido, fila de outra pessoa ou nenhum exemplar livre |
+| DELETE | `/api/eu/pedidos/:id` | sócio | Cancela o próprio pedido e devolve o exemplar à estante |
+| GET | `/api/eu/emprestimos` | sócio | Empréstimos (com atraso e multa), pedidos aguardando retirada, reservas com a posição na fila, `pendencias`, `emUso` e `limite` |
+| POST | `/api/pedidos/:id/retirada` | bibliotecário | Confirma a retirada no balcão e cria o empréstimo de 14 dias; 409 se o pedido venceu |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
+
+Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e ao pedir, sem tarefa agendada.
 
 O banco guarda só o hash SHA-256 do token (tabela `sessao`) e do código de ativação (tabela `codigo_ativacao`), nunca o valor em si. O código é de uso único e fica bloqueado depois de 5 tentativas erradas.
 
