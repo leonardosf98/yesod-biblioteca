@@ -10,6 +10,7 @@ Aplicação web em **Yesod (Haskell)** para gerenciar uma biblioteca comunitári
 - Empréstimo com prazo de 14 dias, limite de 3 abertos por sócio, multa de R$ 1,00 por dia de atraso e bloqueio de exemplar perdido ou já emprestado.
 - Reservas para livros sem exemplar disponível, atendidas automaticamente no empréstimo, com aviso da fila na devolução.
 - Busca de livros por título e categoria; filtros de empréstimos (abertos, atrasados, devolvidos).
+- Login de bibliotecário com senha em hash (`yesod-auth-hashdb`); catálogo público e o resto restrito por papel.
 - Validação de formulários com mensagens em português, proteção CSRF em todo POST e páginas de erro próprias.
 
 ## Tecnologias
@@ -33,6 +34,12 @@ docker compose up -d          # Postgres na porta 5433, bancos biblioteca e bibl
 stack build                   # o primeiro build baixa o GHC e compila as dependências (demora)
 stack exec biblioteca-seed    # opcional: dados de exemplo, só se o banco estiver vazio
 stack exec biblioteca         # http://localhost:3000
+```
+
+O catálogo (livros, autores, editoras e categorias) é público. Sócios, empréstimos, reservas e qualquer alteração exigem login de bibliotecário. Para criar ou trocar a senha de um bibliotecário:
+
+```bash
+stack exec biblioteca-usuario -- maria   # pede a senha (mínimo 8 caracteres) sem mostrar na tela
 ```
 
 - Testes: `stack test`.

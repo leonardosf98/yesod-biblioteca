@@ -7,6 +7,7 @@ dependencies:
 - yesod
 - yesod-core
 - yesod-auth
+- yesod-auth-hashdb
 - yesod-static
 - yesod-form
 - classy-prelude
@@ -77,6 +78,12 @@ executables:
       buildable: false
   biblioteca-seed:
     main: seed.hs
+    source-dirs: app
+    other-modules: []
+    dependencies:
+    - biblioteca
+  biblioteca-usuario:
+    main: usuario.hs
     source-dirs: app
     other-modules: []
     dependencies:

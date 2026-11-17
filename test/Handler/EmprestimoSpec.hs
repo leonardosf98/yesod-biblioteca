@@ -21,6 +21,7 @@ spec :: Spec
 spec = withApp $ do
     describe "Empréstimos pela interface" $ do
         it "registra empréstimo pelo formulário" $ do
+            entrar
             runDB popular
             Entity exemplarId _ <- porCodigo "ER-001"
             Entity socioId _ <- porEmail "ana@example.com"
@@ -37,12 +38,14 @@ spec = withApp $ do
             assertEq "sócio certo" socioId (emprestimoSocioId emprestimo)
 
         it "não oferece exemplar emprestado no formulário" $ do
+            entrar
             runDB popular
             get EmprestimoNovoR
             htmlNoneContain "option" "DC-001"
             htmlAnyContain "option" "ER-001"
 
         it "registra devolução atrasada com multa" $ do
+            entrar
             runDB popular
             Entity exemplarId _ <- porCodigo "DC-001"
             Entity emprestimoId _ <- emprestimoAberto exemplarId
@@ -58,6 +61,7 @@ spec = withApp $ do
             assertEq "disponível de novo" True (exemplarDisponivel exemplar)
 
         it "filtra empréstimos atrasados" $ do
+            entrar
             runDB popular
             request $ do
                 setUrl EmprestimosR
@@ -67,6 +71,7 @@ spec = withApp $ do
             htmlNoneContain "td a" "Fundação"
 
         it "prorroga o prazo de um empréstimo aberto" $ do
+            entrar
             runDB popular
             Entity exemplarId _ <- porCodigo "FU-001"
             Entity emprestimoId emprestimo <- emprestimoAberto exemplarId

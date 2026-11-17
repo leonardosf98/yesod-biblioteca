@@ -123,8 +123,8 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 - [x] 8.6 Datas exibidas como dd/mm/aaaa (`formatarData`)
 
 ## Fase 9 — Autenticação (opcional, diferencial)
-- [ ] 9.1 Login de bibliotecário com `yesod-auth` (`Auth.HashDB` ou e-mail)
-- [ ] 9.2 Proteger rotas de escrita via `isAuthorized`
+- [x] 9.1 Login de bibliotecário com `yesod-auth-hashdb` (formulário em português; `biblioteca-usuario` cria a conta)
+- [x] 9.2 `isAuthorized` por papel: catálogo público para leitura, o resto só para bibliotecário; `authenticate` não cria mais usuário desconhecido
 
 ## Fase 10 — Hospedagem (opcional)
 - [ ] 10.1 `Dockerfile` multi-stage (build com stack, runtime enxuto); incluir `Dockerfile` na regra de tier 3 do `.github/pr-risk-tier.toml`
@@ -159,7 +159,7 @@ Para cada entidade, seguir este padrão de rotas em `config/routes.yesodroutes`:
 Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend-nextjs.md). Ponto de partida estável: tag `v1.0.0`.
 
 - [ ] 13.1 CI completo: hlint, Semgrep, auditoria de dependências pela OSV, testes e pr-risk-tier
-- [ ] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão
+- [ ] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão (2a papéis e login: feito; 2b tokens da API; 2c ativação)
 - [ ] 13.3 API do catálogo
 - [ ] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento
 - [ ] 13.5 API de cadastros e importação por ISBN

@@ -25,6 +25,7 @@ spec :: Spec
 spec = withApp $ do
     describe "CRUD de editora" $ do
         it "cadastra uma editora e mostra na listagem" $ do
+            entrar
             get EditoraNovaR
             enviarEditora EditorasR "Rocco" "Rio de Janeiro"
             statusIs 303
@@ -32,6 +33,7 @@ spec = withApp $ do
             htmlAnyContain "td a" "Rocco"
 
         it "recusa nome repetido no cadastro" $ do
+            entrar
             _ <- runDB $ insert $ Editora "Rocco" Nothing
             get EditoraNovaR
             enviarEditora EditorasR "Rocco" ""
@@ -41,6 +43,7 @@ spec = withApp $ do
             assertEq "continua uma só" 1 total
 
         it "recusa renomear para um nome que já existe" $ do
+            entrar
             _ <- runDB $ insert $ Editora "Rocco" Nothing
             outraId <- runDB $ insert $ Editora "Record" Nothing
             get (EditoraEditarR outraId)
@@ -50,6 +53,7 @@ spec = withApp $ do
             assertEq "nome mantido" "Record" (editoraNome outra)
 
         it "atualiza mantendo o próprio nome" $ do
+            entrar
             editoraId <- runDB $ insert $ Editora "Rocco" Nothing
             get (EditoraEditarR editoraId)
             enviarEditora (EditoraR editoraId) "Rocco" "Rio de Janeiro"
@@ -58,6 +62,7 @@ spec = withApp $ do
             assertEq "cidade gravada" (Just "Rio de Janeiro") (editoraCidade editora)
 
         it "exclui editora sem livros" $ do
+            entrar
             editoraId <- runDB $ insert $ Editora "Sem livros" Nothing
             excluir editoraId
             statusIs 303
@@ -65,6 +70,7 @@ spec = withApp $ do
             assertEq "editora removida" 0 restante
 
         it "não exclui editora com livros" $ do
+            entrar
             runDB popular
             editoras <- runDB $ selectList [EditoraNome ==. "Aleph"] []
             editoraId <- case editoras of

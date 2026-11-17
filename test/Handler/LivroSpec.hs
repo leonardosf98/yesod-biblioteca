@@ -45,6 +45,7 @@ spec :: Spec
 spec = withApp $ do
     describe "CRUD de livro" $ do
         it "cadastra livro com dois autores e normaliza o ISBN" $ do
+            entrar
             base <- criarBase
             get LivroNovoR
             enviarLivro LivrosR base "Livro novo" "123-4567-890" [baseAutorA base, baseAutorB base]
@@ -55,6 +56,7 @@ spec = withApp $ do
             assertEq "dois autores" 2 vinculos
 
         it "recusa ISBN com tamanho errado" $ do
+            entrar
             base <- criarBase
             get LivroNovoR
             enviarLivro LivrosR base "Livro novo" "12345" []
@@ -62,6 +64,7 @@ spec = withApp $ do
             bodyContains "ISBN deve ter 10 ou 13 dígitos"
 
         it "recusa ISBN repetido mas aceita vários livros sem ISBN" $ do
+            entrar
             base <- criarBase
             get LivroNovoR
             enviarLivro LivrosR base "Primeiro" "1234567890" []
@@ -77,6 +80,7 @@ spec = withApp $ do
             assertEq "três livros gravados" 3 total
 
         it "troca os autores ao editar" $ do
+            entrar
             base <- criarBase
             get LivroNovoR
             enviarLivro LivrosR base "Livro" "" [baseAutorA base]
@@ -88,6 +92,7 @@ spec = withApp $ do
             assertEq "só o autor B" [baseAutorB base] (map (livroAutorAutorId . entityVal) vinculos)
 
         it "exclui livro sem exemplares junto com os vínculos de autor" $ do
+            entrar
             base <- criarBase
             get LivroNovoR
             enviarLivro LivrosR base "Descartável" "" [baseAutorA base]
@@ -102,6 +107,7 @@ spec = withApp $ do
             assertEq "livro e vínculos removidos" 0 restante
 
         it "não exclui livro com exemplares" $ do
+            entrar
             runDB popular
             Entity livroId _ <- livroPorTitulo "Dom Casmurro"
             get (LivroR livroId)
@@ -113,6 +119,7 @@ spec = withApp $ do
             assertEq "livro mantido" 1 restante
 
         it "filtra por trecho do título sem diferenciar maiúsculas" $ do
+            entrar
             runDB popular
             request $ do
                 setUrl LivrosR
@@ -122,6 +129,7 @@ spec = withApp $ do
             htmlNoneContain "td a" "Fundação"
 
         it "filtra por categoria" $ do
+            entrar
             runDB popular
             Entity _ fundacao <- livroPorTitulo "Fundação"
             request $ do
