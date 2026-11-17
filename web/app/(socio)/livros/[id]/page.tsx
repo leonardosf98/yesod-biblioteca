@@ -64,7 +64,7 @@ export default async function PaginaLivro({ params }: Props) {
                 {livro.exemplares.map((e) => (
                   <li key={e.codigo} className="flex items-center justify-between gap-4 px-4 py-3">
                     <span className="font-mono">{e.codigo}</span>
-                    <span className="text-texto-suave">{e.estado === "bom" ? "Bom" : "Danificado"}</span>
+                    <span className="text-texto-suave">{{ bom: "Bom", danificado: "Danificado", perdido: "Perdido" }[e.estado]}</span>
                     <span className={e.disponivel ? "font-medium text-marca-forte" : "text-texto-suave"}>{e.disponivel ? "Na estante" : "Indisponível"}</span>
                   </li>
                 ))}

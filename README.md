@@ -57,7 +57,7 @@ npm ci
 npm run dev                   # http://localhost:3001 (API_URL aponta para a API; padrão http://localhost:3000)
 ```
 
-Por enquanto ele tem o login, a ativação da conta do sócio (`/ativar`), a vitrine do catálogo com busca e filtro por categoria (`/`), a página do livro com pedido e fila (`/livros/:id`), "Meus empréstimos" com renovação e cancelamento (`/emprestimos`) o painel do bibliotecário com números, pedidos, atrasados e devoluções do dia (`/painel`) e o balcão com empréstimo em 3 passos e devolução pelo código (`/painel/balcao`); as outras telas chegam junto com os endpoints da API.
+Por enquanto ele tem o login, a ativação da conta do sócio (`/ativar`), a vitrine do catálogo com busca e filtro por categoria (`/`), a página do livro com pedido e fila (`/livros/:id`), "Meus empréstimos" com renovação e cancelamento (`/emprestimos`) o painel do bibliotecário com números, pedidos, atrasados e devoluções do dia (`/painel`) o balcão com empréstimo em 3 passos e devolução pelo código (`/painel/balcao`), pedidos (`/painel/pedidos`), sócios (`/painel/socios`) e o acervo com livros, exemplares, importação por ISBN, autores, editoras e categorias (`/painel/acervo`); as outras telas chegam junto com os endpoints da API.
 
 ## Banco de dados
 

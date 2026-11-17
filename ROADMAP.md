@@ -163,8 +163,8 @@ Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend
 - [x] 13.3 API do catálogo (e a vitrine no Next.js)
 - [x] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento (4a, 4b e 4c feitos)
 - [x] 13.5 API de cadastros e importação por ISBN (painel, balcão, acervo e sócios)
-- [ ] 13.6 Esqueleto do `web/` em Next.js com design system e login via BFF (layout das duas áreas, login e CI: feito; telas reais entram com 13.7 e 13.8)
+- [x] 13.6 Esqueleto do `web/` em Next.js com design system e login via BFF
 - [ ] 13.7 Área do sócio
-- [ ] 13.8 Painel do bibliotecário (8a painel e balcão: feito; 8b-1 pedidos e sócios: feito; 8b-2 acervo)
+- [x] 13.8 Painel do bibliotecário: painel, balcão, pedidos, sócios e acervo
 - [ ] 13.9 Deploy: API no Lightsail, Next.js na Vercel, banco no Supabase
 - [ ] 13.10 Remover as páginas Hamlet e atualizar o README para a Opção B
