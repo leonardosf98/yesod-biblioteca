@@ -161,7 +161,7 @@ Detalhada em [docs/historias/001-frontend-nextjs.md](docs/historias/001-frontend
 - [x] 13.1 CI completo: hlint, Semgrep, auditoria de dependências pela OSV, testes e pr-risk-tier
 - [x] 13.2 Papéis (bibliotecário e sócio), sessões por token e ativação da conta do sócio por código gerado no balcão
 - [x] 13.3 API do catálogo (e a vitrine no Next.js)
-- [ ] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento
+- [ ] 13.4 Pedido de empréstimo pelo sócio: retirada em 48 h, expiração, renovação, bloqueio por multa pendente e registro de pagamento (4a pedido, expiração, retirada e bloqueio: feito; 4b renovação e pagamento; 4c telas)
 - [ ] 13.5 API de cadastros e importação por ISBN
 - [ ] 13.6 Esqueleto do `web/` em Next.js com design system e login via BFF (layout das duas áreas, login e CI: feito; telas reais entram com 13.7 e 13.8)
 - [ ] 13.7 Área do sócio

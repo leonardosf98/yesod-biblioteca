@@ -15,3 +15,7 @@ derivePersistField "StatusReserva"
 data Papel = PapelBibliotecario | PapelSocio
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 derivePersistField "Papel"
+
+data StatusPedido = PedidoAguardando | PedidoRetirado | PedidoExpirado | PedidoCancelado
+    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+derivePersistField "StatusPedido"
