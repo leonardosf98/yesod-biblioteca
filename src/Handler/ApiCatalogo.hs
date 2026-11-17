@@ -6,6 +6,7 @@ module Handler.ApiCatalogo
     ) where
 
 import Import
+import Filtro (contem)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Regras.Pedido (expirarPedidos)
@@ -123,5 +124,3 @@ estadoTexto Bom = "bom"
 estadoTexto Danificado = "danificado"
 estadoTexto Perdido = "perdido"
 
-contem :: EntityField registro Text -> Text -> Filter registro
-contem campo texto = Filter campo (FilterValue ("%" <> texto <> "%")) (BackendSpecificFilter "ILIKE")

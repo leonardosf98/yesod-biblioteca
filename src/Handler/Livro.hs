@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Form.Comum
 import Import
+import Filtro (contem)
 
 livroForm :: Maybe (Livro, [AutorId]) -> Form (Livro, [AutorId])
 livroForm atual = renderizar $ (,)
@@ -69,8 +70,6 @@ getLivrosR = do
         setTitle "Livros"
         $(widgetFile "livros/lista")
 
-contem :: EntityField registro Text -> Text -> Filter registro
-contem campo texto = Filter campo (FilterValue ("%" <> texto <> "%")) (BackendSpecificFilter "ILIKE")
 
 getLivroNovoR :: Handler Html
 getLivroNovoR = do

@@ -109,6 +109,11 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | POST | `/api/eu/emprestimos/:id/renovacao` | sócio | Renova uma vez por mais 7 dias; 409 se já renovado, atrasado, com multa ou atraso pendente, ou com fila para o livro |
 | POST | `/api/emprestimos/:id/pagamento-multa` | bibliotecário | Registra o pagamento da multa (também pelo botão na página do empréstimo); libera pedidos e renovações |
 | POST | `/api/pedidos/:id/retirada` | bibliotecário | Confirma a retirada no balcão e cria o empréstimo de 14 dias; 409 se o pedido venceu |
+| GET | `/api/painel` | bibliotecário | `resumo` (abertos, exemplares, pedidos, atrasados com a multa prevista, devoluções de hoje) e as listas `pedidos`, `atrasados` e `devolucoesHoje` |
+| GET | `/api/balcao/exemplares/:codigo` | bibliotecário | Exemplar pelo código (leitor ou teclado), com o livro e o empréstimo em aberto, se houver |
+| POST | `/api/emprestimos` | bibliotecário | Corpo `{"socioId", "exemplarId"}`; empréstimo de 14 dias no balcão; 409 com o motivo (pendência, limite, exemplar indisponível ou perdido) |
+| POST | `/api/emprestimos/:id/devolucao` | bibliotecário | Registra a devolução e devolve `multaCentavos` |
+| GET | `/api/socios?busca=` | bibliotecário | Até 20 sócios por nome ou e-mail, com `emUso`, `pendencias` e `contaAtiva` |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 
 Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e ao pedir, sem tarefa agendada.
