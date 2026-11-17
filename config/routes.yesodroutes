@@ -76,7 +76,8 @@
 /api/balcao/exemplares/#Text ApiExemplarCodigoR GET
 /api/emprestimos ApiEmprestimosR POST
 /api/emprestimos/#EmprestimoId/devolucao ApiDevolucaoR POST
-/api/socios ApiSociosR GET
+/api/socios ApiSociosR GET POST
+/api/socios/#SocioId ApiSocioR GET PUT DELETE
 /api/autores ApiAutoresR GET POST
 /api/autores/#AutorId ApiAutorR PUT DELETE
 /api/editoras ApiEditorasR GET POST
