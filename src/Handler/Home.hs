@@ -5,15 +5,16 @@
 module Handler.Home where
 
 import Import
+import Regras.Emprestimo (hoje)
 
 getHomeR :: Handler Html
 getHomeR = do
-    hoje <- utctDay <$> liftIO getCurrentTime
+    dia <- hoje
     (livros, disponiveis, socios, atrasados) <- runDB $ (,,,)
         <$> count ([] :: [Filter Livro])
         <*> count [ExemplarDisponivel ==. True]
         <*> count ([] :: [Filter Socio])
-        <*> count [EmprestimoDataDevolucao ==. Nothing, EmprestimoDataPrevista <. hoje]
+        <*> count [EmprestimoDataDevolucao ==. Nothing, EmprestimoDataPrevista <. dia]
     defaultLayout $ do
         setTitle "Biblioteca Comunitária"
         $(widgetFile "homepage")

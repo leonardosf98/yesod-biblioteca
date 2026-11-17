@@ -16,11 +16,11 @@ Aplicação web em **Yesod (Haskell)** para gerenciar uma biblioteca comunitári
 
 | Camada | Ferramenta |
 |---|---|
-| Linguagem e framework | Haskell (GHC 9.2.8), Yesod 1.6 |
+| Linguagem e framework | Haskell (GHC 9.10.3), Yesod 1.6 |
 | Templates | Hamlet (HTML), Lucius (CSS), Bootstrap 3 |
 | Banco | PostgreSQL 16, via Persistent (`persistent-postgresql`) |
 | HTTP para as APIs | `http-conduit` + `aeson` |
-| Build | Stack (snapshot lts-20.26) |
+| Build | Stack (snapshot lts-24.67, com warp 3.4.17 por segurança) |
 | Testes | `hspec` + `yesod-test` |
 | Ambiente | Docker Compose (Postgres), GitHub Actions (CI) |
 
