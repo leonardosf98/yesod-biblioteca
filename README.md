@@ -66,6 +66,25 @@ Sócios são cadastrados pelo bibliotecário no painel; o sócio recebe um códi
 - Testes: `stack test`.
 - Outro banco: defina `YESOD_PGHOST`, `YESOD_PGPORT`, `YESOD_PGUSER`, `YESOD_PGPASS` e `YESOD_PGDATABASE` (veja `.env.example`).
 
+## Deploy
+
+A cada push na `main`, a action **Imagens** publica no GHCR `ghcr.io/leonardosf98/biblioteca-api` (binários do Stack sobre Ubuntu 24.04) e `ghcr.io/leonardosf98/biblioteca-web` (Next em modo `standalone`), com as tags `latest` e o SHA curto do commit.
+
+Em produção, uma máquina com Docker roda `deploy/docker-compose.yml`: Postgres, API, Next e Caddy. Só o Caddy expõe portas (80 e 443), e o certificado HTTPS é emitido sozinho para o `DOMINIO`. A API e o banco ficam acessíveis apenas pela rede do compose.
+
+```bash
+mkdir biblioteca && cd biblioteca
+curl -fsSLO https://raw.githubusercontent.com/leonardosf98/yesod-biblioteca/main/deploy/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/leonardosf98/yesod-biblioteca/main/deploy/Caddyfile
+printf 'DOMINIO=library.leonardosouza.dev\nPOSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 24)" > .env
+docker compose up -d
+
+docker compose run --rm api biblioteca-seed                  # opcional: dados de exemplo
+docker compose run --rm -it api biblioteca-usuario maria     # cria o bibliotecário
+```
+
+O registro DNS do `DOMINIO` precisa apontar para a máquina antes do `up`, senão o Caddy não consegue o certificado. Para atualizar a versão: `docker compose pull && docker compose up -d`.
+
 ## Banco de dados
 
 Tabelas definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. Nove são do acervo e da circulação; outras quatro cuidam do acesso e do app do sócio (`user`, `sessao`, `codigo_ativacao`, `pedido`). A tabela `email` vem do scaffold do Yesod e não é usada.

@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: biblioteca
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: biblioteca
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biblioteca"]
+      interval: 5s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    image: ghcr.io/leonardosf98/biblioteca-api:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      YESOD_PGHOST: db
+      YESOD_PGPORT: "5432"
+      YESOD_PGUSER: biblioteca
+      YESOD_PGPASS: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      YESOD_PGDATABASE: biblioteca
+    depends_on:
+      db:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
+  web:
+    image: ghcr.io/leonardosf98/biblioteca-web:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:3000
+    depends_on:
+      - api
+    security_opt:
+      - no-new-privileges:true
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMINIO: ${DOMINIO:?defina DOMINIO no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
