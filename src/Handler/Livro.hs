@@ -4,11 +4,11 @@
 module Handler.Livro where
 
 import Control.Monad (mfilter)
-import Data.Char (isDigit)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Form.Comum
 import Import
+import Regras.Acervo (normalizarIsbn)
 import Filtro (contem)
 
 livroForm :: Maybe (Livro, [AutorId]) -> Form (Livro, [AutorId])
@@ -29,14 +29,7 @@ livroForm atual = renderizar $ (,)
     autores = optionsPersistKey [] [Asc AutorNome] autorNome
 
 isbnField :: Field Handler Text
-isbnField = check validar textField
-  where
-    validar texto
-        | T.length digitos `elem` [10, 13] && T.all valido digitos = Right digitos
-        | otherwise = Left ("ISBN deve ter 10 ou 13 dígitos" :: Text)
-      where
-        digitos = T.toUpper (T.filter (`notElem` ("- " :: String)) texto)
-        valido c = isDigit c || c == 'X'
+isbnField = checkM (return . maybe (Left ("ISBN deve ter 10 ou 13 dígitos" :: Text)) Right . normalizarIsbn) textField
 
 anoField :: Field Handler Int
 anoField = checkBool (\ano -> ano >= 1000 && ano <= 2100) ("Ano fora do intervalo 1000–2100" :: Text) intField

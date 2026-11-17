@@ -6,6 +6,7 @@ import Form.Comum
 import Handler.Livro (isbnField, isbnEmUso)
 import Import
 import Integracao.OpenLibrary
+import Regras.Acervo (gravarLivroExterno)
 
 importarForm :: Form (Text, CategoriaId)
 importarForm = renderizar $ (,)
@@ -40,22 +41,3 @@ postLivroImportarR = do
                             mensagem "success" "Livro importado da Open Library."
                             redirect (LivroR livroId)
         _ -> paginaFormulario "Importar por ISBN" LivroImportarR formulario enctype
-
-gravarLivroExterno :: MonadIO m => CategoriaId -> Text -> LivroExterno -> ReaderT SqlBackend m LivroId
-gravarLivroExterno categoriaId isbn externo = do
-    editoraId <- forM (externoEditora externo) $ \nome ->
-        either entityKey id <$> insertBy (Editora nome Nothing)
-    autores <- forM (externoAutores externo) $ \nome -> do
-        existente <- selectFirst [AutorNome ==. nome] []
-        maybe (insert (Autor nome Nothing)) (return . entityKey) existente
-    livroId <- insert Livro
-        { livroTitulo = externoTitulo externo
-        , livroIsbn = Just isbn
-        , livroAno = externoAno externo
-        , livroSinopse = externoSinopse externo
-        , livroCapaUrl = externoCapa externo
-        , livroEditoraId = editoraId
-        , livroCategoriaId = categoriaId
-        }
-    insertMany_ [LivroAutor livroId autorId | autorId <- ordNub autores]
-    return livroId

@@ -62,8 +62,8 @@
 /api/ativacao ApiAtivacaoR POST
 /api/socios/#SocioId/codigo-ativacao ApiSocioCodigoR POST
 /socios/#SocioId/codigo-ativacao SocioCodigoR POST
-/api/livros ApiLivrosR GET
-/api/livros/#LivroId ApiLivroR GET
+/api/livros ApiLivrosR GET POST
+/api/livros/#LivroId ApiLivroR GET PUT DELETE
 /api/livros/#LivroId/pedidos ApiLivroPedidosR POST
 /api/eu/pedidos/#PedidoId ApiEuPedidoR DELETE
 /api/eu/emprestimos ApiEuEmprestimosR GET
@@ -83,3 +83,6 @@
 /api/editoras/#EditoraId ApiEditoraR PUT DELETE
 /api/categorias ApiCategoriasR GET POST
 /api/categorias/#CategoriaId ApiCategoriaR PUT DELETE
+!/api/livros/importacao ApiLivroImportacaoR POST
+/api/livros/#LivroId/exemplares ApiLivroExemplaresR POST
+/api/exemplares/#ExemplarId ApiExemplarR PUT DELETE

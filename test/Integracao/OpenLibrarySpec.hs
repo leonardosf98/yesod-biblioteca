@@ -3,7 +3,7 @@
 module Integracao.OpenLibrarySpec (spec) where
 
 import Data.Aeson (decode)
-import Handler.LivroImportar (gravarLivroExterno)
+import Regras.Acervo (gravarLivroExterno)
 import Integracao.OpenLibrary
 import TestImport
 
