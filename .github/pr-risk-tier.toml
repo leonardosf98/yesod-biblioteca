@@ -15,4 +15,4 @@ paths = ["config/models.persistentmodels", "config/routes.yesodroutes", "src/Int
 [[rule]]
 id = "seguranca_e_infra"
 tier = 3
-paths = ["src/Foundation.hs", "config/settings.yml", "package.yaml", "stack.yaml", "stack.yaml.lock", ".github/**", "docker-compose.yml", "docker/**"]
+paths = ["src/Foundation.hs", "config/settings.yml", "package.yaml", "stack.yaml", "stack.yaml.lock", ".github/**", "docker-compose.yml", "docker/**", "web/package.json", "web/package-lock.json", "web/lib/api.ts", "web/app/entrar/actions.ts"]
