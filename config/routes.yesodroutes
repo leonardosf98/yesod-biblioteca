@@ -62,3 +62,5 @@
 /api/ativacao ApiAtivacaoR POST
 /api/socios/#SocioId/codigo-ativacao ApiSocioCodigoR POST
 /socios/#SocioId/codigo-ativacao SocioCodigoR POST
+/api/livros ApiLivrosR GET
+/api/livros/#LivroId ApiLivroR GET
