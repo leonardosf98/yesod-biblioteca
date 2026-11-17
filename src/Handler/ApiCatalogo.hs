@@ -18,8 +18,10 @@ getApiLivrosR :: Handler Value
 getApiLivrosR = do
     busca <- mfilter (not . null) . fmap T.strip <$> lookupGetParam "busca"
     categoriaFiltro <- (>>= fromPathPiece) <$> lookupGetParam "categoria"
+    pagina <- max 1 . fromMaybe 1 . (>>= readMay) <$> lookupGetParam "pagina"
+    porPagina <- min 100 . max 1 . fromMaybe 24 . (>>= readMay) <$> lookupGetParam "porPagina"
     agora <- liftIO getCurrentTime
-    (livros, categorias, autoresPorLivro, contagens) <- runDB $ do
+    (livros, total, categorias, autoresPorLivro, contagens) <- runDB $ do
         expirarPedidos agora
         porAutor <- case busca of
             Nothing -> return []
@@ -30,12 +32,14 @@ getApiLivrosR = do
                 Nothing -> []
                 Just texto -> [contem LivroTitulo texto] ||. [LivroIsbn ==. Just texto] ||. [LivroId <-. porAutor]
             filtroCategoria = maybe [] (\c -> [LivroCategoriaId ==. c]) categoriaFiltro
-        livros <- selectList (filtroBusca ++ filtroCategoria) [Asc LivroTitulo]
+        total <- count (filtroBusca ++ filtroCategoria)
+        livros <- selectList (filtroBusca ++ filtroCategoria)
+            [Asc LivroTitulo, Asc LivroId, LimitTo porPagina, OffsetBy ((pagina - 1) * porPagina)]
         categorias <- selectList [] [Asc CategoriaNome]
         let ids = map entityKey livros
         autores <- autoresDosLivros ids
         contagens <- contagensDosLivros ids
-        return (livros, categorias, autores, contagens)
+        return (livros, total, categorias, autores, contagens)
     let nomeCategoria = Map.fromList [(k, categoriaNome v) | Entity k v <- categorias]
     returnJson $ object
         [ "livros" .=
@@ -52,6 +56,10 @@ getApiLivrosR = do
             | Entity livroId livro <- livros
             ]
         , "categorias" .= [categoriaJson k (Just (categoriaNome v)) | Entity k v <- categorias]
+        , "pagina" .= pagina
+        , "porPagina" .= porPagina
+        , "total" .= total
+        , "paginas" .= max 1 ((total + porPagina - 1) `div` porPagina)
         ]
 
 getApiLivroR :: LivroId -> Handler Value
