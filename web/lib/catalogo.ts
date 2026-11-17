@@ -21,3 +21,22 @@ export function buscarCatalogo(filtros: { busca?: string; categoria?: string }) 
   const consulta = parametros.size ? `?${parametros}` : "";
   return api<Catalogo>(`/api/livros${consulta}`);
 }
+
+export type LivroDetalhe = {
+  id: number;
+  titulo: string;
+  isbn: string | null;
+  ano: number | null;
+  sinopse: string | null;
+  capaUrl: string | null;
+  editora: string | null;
+  categoria: Categoria;
+  autores: { id: number; nome: string }[];
+  exemplares: { codigo: string; estado: "bom" | "danificado"; disponivel: boolean }[];
+  disponiveis: number;
+  fila: number;
+};
+
+export function buscarLivro(id: string) {
+  return api<LivroDetalhe>(`/api/livros/${encodeURIComponent(id)}`);
+}
