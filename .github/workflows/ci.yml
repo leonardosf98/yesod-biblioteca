@@ -1,11 +1,45 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
+  lint:
+    name: Lint (HLint)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: haskell-actions/hlint-setup@v2
+        with:
+          version: "3.10"
+
+      - uses: haskell-actions/hlint-run@v2
+        with:
+          path: '["src/", "app/", "test/"]'
+          fail-on: warning
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-24.04
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan
+        run: semgrep scan --error --config auto --config p/secrets
+
   build-test:
     name: Build e testes
     runs-on: ubuntu-24.04
@@ -48,9 +82,58 @@ jobs:
       - name: Testes
         run: stack test
 
+      - name: Listar dependências para a auditoria
+        run: |
+          stack ls dependencies --separator ' ==' \
+            | grep -v '^biblioteca ' \
+            | sed 's/^/any./' \
+            | paste -sd, \
+            | sed 's/,/,\n             /g; s/^/constraints: /' \
+            > cabal.project.freeze
+          head -5 cabal.project.freeze
+          wc -l cabal.project.freeze
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependencias
+          path: cabal.project.freeze
+
+  dependency-audit:
+    name: Auditoria de dependências (OSV)
+    runs-on: ubuntu-24.04
+    needs: build-test
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dependencias
+
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.7.1
+        continue-on-error: true
+        with:
+          scan-args: |-
+            --lockfile=cabal.project.freeze
+            --format=json
+            --output=osv-resultado.json
+
+      - name: Falhar em vulnerabilidade high/critical
+        run: |
+          if [ ! -s osv-resultado.json ]; then
+            echo "::error::osv-scanner não gerou resultado; confira o passo anterior."
+            exit 1
+          fi
+          jq -r '.results[]?.packages[]? | .package.name as $p | .groups[]? | "\($p) \(.ids | join(",")) severidade=\(.max_severity // "desconhecida")"' osv-resultado.json | tee achados.txt
+          GRAVES=$(jq '[.results[]?.packages[]?.groups[]? | (.max_severity // "0") | tonumber? // 0 | select(. >= 7.0)] | length' osv-resultado.json)
+          TOTAL=$(wc -l < achados.txt)
+          echo "Vulnerabilidades: ${TOTAL} no total, ${GRAVES} high/critical (CVSS >= 7.0)"
+          if [ "$GRAVES" -gt 0 ]; then
+            echo "::error::Há ${GRAVES} vulnerabilidade(s) high/critical nas dependências."
+            exit 1
+          fi
+
   evidence:
     name: Pacote de evidências
-    needs: [build-test]
+    needs: [lint, sast, build-test, dependency-audit]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
