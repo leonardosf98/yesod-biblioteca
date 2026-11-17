@@ -321,6 +321,8 @@ rotaDoSocio rota = case rota of
     ApiLivroPedidosR _ -> True
     ApiEuPedidoR _ -> True
     ApiEuEmprestimosR -> True
+    ApiEuRenovacaoR _ -> True
+    ApiLivroReservasR _ -> True
     _ -> False
 
 exigirLogin :: Handler AuthResult

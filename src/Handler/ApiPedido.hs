@@ -5,14 +5,17 @@ module Handler.ApiPedido
     , deleteApiEuPedidoR
     , getApiEuEmprestimosR
     , postApiPedidoRetiradaR
+    , postApiEuRenovacaoR
+    , postApiLivroReservasR
+    , postApiPagamentoMultaR
     ) where
 
 import Import
 import Data.List (findIndex)
 import qualified Data.Map.Strict as Map
-import Regras.Emprestimo (hoje, limiteAbertos)
+import Regras.Emprestimo (hoje, limiteAbertos, registrarPagamentoMulta)
 import Regras.Pedido
-import Regras.Reserva (filaDeReservas)
+import Regras.Reserva (criarReserva, filaDeReservas)
 
 socioAtual :: Handler SocioId
 socioAtual = do
@@ -118,3 +121,29 @@ getApiEuEmprestimosR = do
         , "emUso" .= (length abertos + length pedidos)
         , "limite" .= limiteAbertos
         ]
+
+postApiEuRenovacaoR :: EmprestimoId -> Handler Value
+postApiEuRenovacaoR emprestimoId = do
+    socioId <- socioAtual
+    dia <- hoje
+    resultado <- runDB $ renovarEmprestimo socioId emprestimoId dia
+    case resultado of
+        Left motivo -> recusar status409 motivo
+        Right novaData -> returnJson $ object ["dataPrevista" .= novaData]
+
+postApiLivroReservasR :: LivroId -> Handler Value
+postApiLivroReservasR livroId = do
+    socioId <- socioAtual
+    dia <- hoje
+    resultado <- runDB $ get404 livroId >> criarReserva socioId livroId dia
+    case resultado of
+        Left motivo -> recusar status409 motivo
+        Right reservaId -> do
+            posicao <- runDB $ length . takeWhile ((/= reservaId) . entityKey) <$> filaDeReservas livroId
+            sendStatusJSON status201 $ object ["id" .= reservaId, "posicao" .= (posicao + 1)]
+
+postApiPagamentoMultaR :: EmprestimoId -> Handler Value
+postApiPagamentoMultaR emprestimoId = do
+    dia <- hoje
+    resultado <- runDB $ registrarPagamentoMulta emprestimoId dia
+    either (recusar status409) (const (sendResponseStatus status204 ())) resultado

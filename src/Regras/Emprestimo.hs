@@ -10,6 +10,7 @@ module Regras.Emprestimo
     , registrarDevolucao
     , cancelarEmprestimo
     , formatarCentavos
+    , registrarPagamentoMulta
     ) where
 
 import ClassyPrelude.Yesod
@@ -95,3 +96,13 @@ cancelarEmprestimo emprestimoId = do
                 delete emprestimoId
                 update (emprestimoExemplarId emprestimo) [ExemplarDisponivel =. True]
                 return (Right ())
+
+registrarPagamentoMulta :: MonadIO m => EmprestimoId -> Day -> ReaderT SqlBackend m (Either Text ())
+registrarPagamentoMulta emprestimoId dia = do
+    encontrado <- get emprestimoId
+    case encontrado of
+        Nothing -> return (Left "Empréstimo não encontrado.")
+        Just emprestimo
+            | emprestimoMultaCentavos emprestimo <= 0 -> return (Left "Esse empréstimo não tem multa.")
+            | isJust (emprestimoMultaPagaEm emprestimo) -> return (Left "A multa já foi paga.")
+            | otherwise -> Right <$> update emprestimoId [EmprestimoMultaPagaEm =. Just dia]

@@ -181,3 +181,82 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         bodyContains "\"posicao\":1"
         bodyContains "\"emUso\":1"
         bodyContains "\"pendencias\":[]"
+
+    describe "renovação, fila e multa" $ do
+        let emprestimoDe c dias = do
+                dia <- hoje
+                runDB $ do
+                    update (exemplar c) [ExemplarDisponivel =. False]
+                    insert $ Emprestimo (exemplar c) (socio c) (addDays (-3) dia) (addDays dias dia) Nothing 0 0 Nothing
+            renovar t e = enviarJson (Just t) (ApiEuRenovacaoR e) (object [])
+
+        it "renova uma vez por mais 7 dias" $ do
+            c <- cenario
+            e <- emprestimoDe c 5
+            renovar (token c) e
+            statusIs 200
+            dia <- hoje
+            prevista <- runDB $ emprestimoDataPrevista <$> getJust e
+            assertEq "+7" (addDays 12 dia) prevista
+            renovar (token c) e
+            statusIs 409
+            bodyContains "já foi renovado"
+
+        it "não renova atrasado, com fila ou de outro sócio" $ do
+            c <- cenario
+            atrasado <- emprestimoDe c (-1)
+            renovar (token c) atrasado
+            statusIs 409
+            bodyContains "prazo já venceu"
+            runDB $ update atrasado [EmprestimoDataPrevista =. fromGregorian 2099 1 1]
+            (outro, t2) <- novoSocio "bia@example.com"
+            renovar t2 atrasado
+            statusIs 409
+            bodyContains "não encontrado"
+            dia <- hoje
+            runDB $ insert_ $ Reserva (livro c) outro dia Ativa
+            renovar (token c) atrasado
+            statusIs 409
+            bodyContains "fila de reservas"
+
+        it "sócio entra na fila pelo app só quando não há exemplar livre" $ do
+            c <- cenario
+            enviarJson (Just (token c)) (ApiLivroReservasR (livro c)) (object [])
+            statusIs 409
+            runDB $ update (exemplar c) [ExemplarDisponivel =. False]
+            enviarJson (Just (token c)) (ApiLivroReservasR (livro c)) (object [])
+            statusIs 201
+            bodyContains "\"posicao\":1"
+
+        it "bibliotecário registra o pagamento e o sócio volta a pedir" $ do
+            c <- cenario
+            dia <- hoje
+            e <- runDB $ do
+                categoria <- insert $ Categoria "Outros" Nothing
+                l <- insert $ Livro "Antigo" Nothing Nothing Nothing Nothing Nothing categoria
+                ex <- insert $ Exemplar l "AN-1" Bom True
+                insert $ Emprestimo ex (socio c) (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 200 0 Nothing
+            enviarJson (Just (token c)) (ApiPagamentoMultaR e) (object [])
+            statusIs 403
+            t <- tokenBibliotecario
+            enviarJson (Just t) (ApiPagamentoMultaR e) (object [])
+            statusIs 204
+            enviarJson (Just t) (ApiPagamentoMultaR e) (object [])
+            statusIs 409
+            pedir (token c) (livro c)
+            statusIs 201
+
+        it "balcão registra o pagamento pela página do empréstimo" $ do
+            c <- cenario
+            dia <- hoje
+            e <- runDB $ insert $ Emprestimo (exemplar c) (socio c) (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 200 0 Nothing
+            entrar
+            get (EmprestimoR e)
+            htmlAnyContain ".form-pagamento button" "Registrar pagamento"
+            request $ do
+                setMethod "POST"
+                setUrl (EmprestimoPagamentoR e)
+                addToken_ ".form-pagamento"
+            statusIs 303
+            paga <- runDB $ emprestimoMultaPagaEm <$> getJust e
+            assertEq "paga hoje" (Just dia) paga

@@ -107,6 +107,7 @@ getEmprestimoR emprestimoId = do
     dia <- hoje
     let aberto = isNothing (emprestimoDataDevolucao emprestimo)
         multaPrevista = calcularMulta (emprestimoDataPrevista emprestimo) dia
+        multaEmAberto = not aberto && emprestimoMultaCentavos emprestimo > 0 && isNothing (emprestimoMultaPagaEm emprestimo)
     token <- reqToken <$> getRequest
     defaultLayout $ do
         setTitle "Empréstimo"
@@ -168,3 +169,10 @@ postEmprestimoExcluirR emprestimoId = do
     case cancelado of
         Left erro -> mensagem "danger" erro >> redirect (EmprestimoR emprestimoId)
         Right () -> mensagem "success" "Empréstimo excluído e exemplar liberado." >> redirect EmprestimosR
+
+postEmprestimoPagamentoR :: EmprestimoId -> Handler Html
+postEmprestimoPagamentoR emprestimoId = do
+    dia <- hoje
+    resultado <- runDB $ registrarPagamentoMulta emprestimoId dia
+    either (mensagem "danger") (const (mensagem "success" "Pagamento da multa registrado.")) resultado
+    redirect (EmprestimoR emprestimoId)

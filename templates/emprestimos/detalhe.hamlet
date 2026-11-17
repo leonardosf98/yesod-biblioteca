@@ -16,6 +16,8 @@
             #{formatarCentavos multaPrevista} se devolvido hoje
         $else
             #{formatarCentavos (emprestimoMultaCentavos emprestimo)}
+            $maybe pagaEm <- emprestimoMultaPagaEm emprestimo
+                (paga em #{formatarData pagaEm})
 
 $if aberto
     <div .acoes>
@@ -25,3 +27,9 @@ $if aberto
             <button .btn .btn-success type=submit>Registrar devolução
         <a .btn .btn-default href=@{EmprestimoEditarR emprestimoId}>Prorrogar
         ^{botaoExcluir (EmprestimoExcluirR emprestimoId)}
+
+$if multaEmAberto
+    <form .form-pagamento method=post action=@{EmprestimoPagamentoR emprestimoId}>
+        $maybe valor <- token
+            <input type=hidden name=#{defaultCsrfParamName} value=#{valor}>
+        <button .btn .btn-warning type=submit>Registrar pagamento da multa
