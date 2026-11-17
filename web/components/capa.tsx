@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 const cores = ["#1e3a5f", "#7c2d12", "#57534e", "#134e4a", "#312e81", "#713f12", "#831843", "#1e293b", "#365314", "#0c4a6e"];
@@ -9,11 +12,17 @@ export function Capa({ id, titulo, autores, capaUrl, className }: {
   capaUrl: string | null;
   className?: string;
 }) {
+  const [falhou, setFalhou] = useState(false);
+  const imagem = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    const img = imagem.current;
+    if (img?.complete && img.naturalWidth === 0) setFalhou(true);
+  }, [capaUrl]);
   const base = cn("aspect-[3/4] w-full overflow-hidden rounded-xl shadow-[0_1px_2px_rgba(0,0,0,.06),0_8px_24px_-12px_rgba(0,0,0,.35)]", className);
-  if (capaUrl) {
+  if (capaUrl && !falhou) {
     return (
       <div className={cn(base, "bg-zinc-200 dark:bg-zinc-800")}>
-        <img src={capaUrl} alt={`Capa de ${titulo}`} loading="lazy" className="size-full object-cover" />
+        <img ref={imagem} src={capaUrl} alt={`Capa de ${titulo}`} loading="lazy" onError={() => setFalhou(true)} className="size-full object-cover" />
       </div>
     );
   }
