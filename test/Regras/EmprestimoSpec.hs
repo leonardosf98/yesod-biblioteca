@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Regras.EmprestimoSpec (spec) where
 
+import Data.Either (lefts)
 import Data.Time (addDays, fromGregorian)
 import Regras.Emprestimo
 import TestImport
@@ -72,7 +73,7 @@ spec = do
             exemplares <- mapM (\c -> novoExemplar base c Bom) ["A-1", "A-2", "A-3", "A-4"]
             resultados <- runDB $ mapM (\e -> realizarEmprestimo (baseSocio base) e dia) exemplares
             assertEq "três aceitos" 3 (length (rights resultados))
-            assertEq "quarto recusado" (Just "O sócio já tem 3 empréstimos em aberto (limite 3).") (headMay [erro | Left erro <- resultados])
+            assertEq "quarto recusado" (Just "O sócio já tem 3 empréstimos em aberto (limite 3).") (headMay (lefts resultados))
 
         it "devolução com atraso grava a multa e libera o exemplar" $ do
             base <- criarBase

@@ -12,19 +12,19 @@ packages:
   original:
     hackage: warp-3.4.17
 - completed:
-    hackage: time-manager-0.3.2@sha256:74c16026c8592802d8a1cd9510c0223dad247b2a9ca791fa0153d243b56cc09e,1290
+    hackage: time-manager-0.5.2@sha256:06acb3c3f50d3078f1c5dda9af09a42d0bfdbcd5d8dcd520d45544028c08e02d,1494
     pantry-tree:
-      sha256: f282e2630df833732bde29944d4b0ac0d86399bcce80c1a3d523c2a5651b9e49
-      size: 461
+      sha256: d29d6142480e16ad74ee18c6935cb3d530bcdd7d539d801eddf5be3d8d8d367e
+      size: 534
   original:
-    hackage: time-manager-0.3.2
+    hackage: time-manager-0.5.2
 - completed:
-    hackage: http2-5.4.9@sha256:7ee1e7754881853cf11eef77038cd3228d2c8fa67612bc710cfaff612ff8613c,10670
+    hackage: http2-5.4.14@sha256:383a440760817a8a1ed4c86047c07a734b4fbaab89cf45a54a85188071fb5cad,10748
     pantry-tree:
-      sha256: 1165170f9138bb9d346b4185495da5a354e09d6aeb6ba486de3a6662d3896e09
-      size: 44944
+      sha256: 76689facf17078836dbb6e859a7af7e06c1820ab0c09b5da1493581e7b485f2b
+      size: 45009
   original:
-    hackage: http2-5.4.9
+    hackage: http2-5.4.14
 - completed:
     hackage: http-semantics-0.4.2@sha256:9938dfae087bbb52bf79939997284c583855f4155367604612a8979caa8e41a9,1535
     pantry-tree:

@@ -1,0 +1,19 @@
+[[IgnoredVulns]]
+id = "HSEC-2026-0006"
+reason = "Cabal só é usado no build pelo stack; o problema apaga arquivos durante o configure e não chega à aplicação em execução."
+
+[[IgnoredVulns]]
+id = "HSEC-2024-0003"
+reason = "Injeção de comando do process só acontece no Windows; a aplicação roda em Linux e não chama processos externos."
+
+[[IgnoredVulns]]
+id = "HSEC-2023-0007"
+reason = "readFloat do base sem versão corrigida; a aplicação não converte texto do usuário para Float/Double (JSON passa pelo scientific, campos numéricos são Int)."
+
+[[IgnoredVulns]]
+id = "HSEC-2025-0002"
+reason = "Oráculo de assinatura Ed25519 do cryptonite; a aplicação não gera nem verifica assinaturas Ed25519."
+
+[[IgnoredVulns]]
+id = "HSEC-2026-0008"
+reason = "Name Constraints do X.509 só são aplicadas no crypton-x509 1.9.1, que exige crypton 1.1; o yesod-auth e o yesod-static ainda não compilam com crypton 1.1 (yesodweb/yesod#1925 e #1917). Afeta só as chamadas HTTPS de saída para Open Library e ViaCEP. Rever quando o Yesod publicar a correção."
