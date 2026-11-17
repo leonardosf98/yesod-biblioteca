@@ -48,11 +48,13 @@ Pré-requisitos: [Stack](https://docs.haskellstack.org/), Node 24, Docker e a bi
 ```bash
 docker compose up -d          # Postgres na porta 5433, bancos biblioteca e biblioteca_test
 stack build                   # o primeiro build baixa o GHC e compila as dependências (demora)
-stack exec biblioteca-seed    # opcional: dados de exemplo, só se o banco estiver vazio
+stack exec biblioteca-seed    # opcional: dados de exemplo; pode rodar de novo sem duplicar
 stack exec biblioteca         # API em http://localhost:3000
 
 cd web && npm ci && npm run dev   # frontend em http://localhost:3001 (API_URL, padrão http://localhost:3000)
 ```
+
+O seed traz 67 livros: obras em domínio público do [Project Gutenberg](https://www.gutenberg.org/) e alguns títulos de ficção científica e técnicos. As capas ficam em `web/public/capas/` e vêm da [Open Library](https://openlibrary.org/).
 
 Para criar ou trocar a senha de um bibliotecário:
 

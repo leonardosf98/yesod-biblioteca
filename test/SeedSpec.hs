@@ -45,7 +45,7 @@ spec = withApp $ do
             duna <- runDB $ selectFirst [LivroTitulo ==. "Duna"] []
             assertEq "Duna voltou" True (isJust duna)
 
-        it "livros do Gutenberg vêm com capa, inclusive os do exemplo" $ do
+        it "livros de domínio público vêm com capa, inclusive os do exemplo" $ do
             runDB popular
             dom <- runDB $ selectFirst [LivroTitulo ==. "Dom Casmurro"] []
             assertEq "Dom Casmurro com capa" True (isJust (dom >>= livroCapaUrl . entityVal))
