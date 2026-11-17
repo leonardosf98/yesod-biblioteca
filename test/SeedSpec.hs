@@ -30,6 +30,21 @@ spec = withApp $ do
             livros' <- runDB $ count ([] :: [Filter Livro])
             assertEq "mesma quantidade de livros" livros livros'
 
+        it "traz acervo suficiente para paginar o catálogo" $ do
+            runDB popular
+            livros <- runDB $ count ([] :: [Filter Livro])
+            assertEq "pelo menos 40 livros" True (livros >= 40)
+
+        it "acrescenta o acervo num banco que já tinha o exemplo" $ do
+            runDB popular
+            runDB $ do
+                duna <- selectKeysList [LivroTitulo ==. "Duna"] []
+                deleteWhere [ExemplarLivroId <-. duna]
+                deleteWhere [LivroId <-. duna]
+            runDB popular
+            duna <- runDB $ selectFirst [LivroTitulo ==. "Duna"] []
+            assertEq "Duna voltou" True (isJust duna)
+
         it "exemplar emprestado fica indisponível" $ do
             runDB popular
             abertos <- runDB $ selectList [EmprestimoDataDevolucao ==. Nothing] []
