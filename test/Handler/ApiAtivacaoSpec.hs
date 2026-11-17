@@ -120,3 +120,11 @@ spec = withApp $ describe "Ativação da conta do sócio" $ do
         statusIs 303
         _ <- followRedirect
         htmlAnyContain ".alert" "Código de ativação"
+
+    it "não transforma conta de bibliotecário em conta de sócio" $ do
+        _ <- runDB $ salvarBibliotecario "ana@example.com" "senha-da-ana-1"
+        socioId <- novoSocio "ana@example.com"
+        gerarCodigo socioId >>= \c -> ativar "ana@example.com" c "minha-senha-1"
+        statusIs 400
+        usuario <- runDB $ getBy (UniqueUser "ana@example.com")
+        assertEq "continua bibliotecário" (Just PapelBibliotecario) (userPapel . entityVal <$> usuario)

@@ -49,27 +49,28 @@ ativarConta email codigo senha
     | T.length senha < 8 = return (Left SenhaCurta)
     | otherwise = do
         agora <- liftIO getCurrentTime
-        socio <- getBy (UniqueSocioEmail (T.toLower (T.strip email)))
+        socio <- getBy (UniqueSocioEmail login)
         registro <- maybe (return Nothing) (getBy . UniqueCodigoAtivacaoSocio . entityKey) socio
+        existente <- getBy (UniqueUser login)
+        let contaDeBibliotecario = maybe False ((== PapelBibliotecario) . userPapel . entityVal) existente
         case (socio, registro) of
             (Just (Entity socioId _), Just (Entity registroId r))
-                | codigoAtivacaoExpiraEm r <= agora || codigoAtivacaoTentativas r >= maximoTentativas ->
+                | contaDeBibliotecario
+                    || codigoAtivacaoExpiraEm r <= agora
+                    || codigoAtivacaoTentativas r >= maximoTentativas ->
                     return (Left CodigoInvalido)
                 | codigoAtivacaoHash r /= hashToken (normalizarCodigo codigo) -> do
                     update registroId [CodigoAtivacaoTentativas +=. 1]
                     return (Left CodigoInvalido)
                 | otherwise -> do
                     delete registroId
-                    Right <$> criarOuRedefinir socioId
+                    usuario <- setPassword senha (User login Nothing PapelSocio (Just socioId))
+                    Right <$> case existente of
+                        Just (Entity usuarioId _) -> do
+                            replace usuarioId usuario
+                            deleteWhere [SessaoUserId ==. usuarioId]
+                            return usuarioId
+                        Nothing -> insert usuario
             _ -> return (Left CodigoInvalido)
   where
     login = T.toLower (T.strip email)
-    criarOuRedefinir socioId = do
-        usuario <- setPassword senha (User login Nothing PapelSocio (Just socioId))
-        existente <- getBy (UniqueUser login)
-        case existente of
-            Just (Entity usuarioId _) -> do
-                replace usuarioId usuario
-                deleteWhere [SessaoUserId ==. usuarioId]
-                return usuarioId
-            Nothing -> insert usuario
