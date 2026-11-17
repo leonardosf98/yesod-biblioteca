@@ -43,3 +43,13 @@ export async function excluirSocio(id: number): Promise<ResultadoAcao> {
   revalidatePath("/painel/socios", "layout");
   redirect("/painel/socios");
 }
+
+export async function cancelarReserva(reservaId: number): Promise<ResultadoAcao> {
+  try {
+    await api(`/api/reservas/${reservaId}`, { method: "DELETE" });
+  } catch (erro) {
+    return { erro: erro instanceof ErroApi ? erro.message : "Não foi possível cancelar." };
+  }
+  revalidatePath("/painel/socios", "layout");
+  return { ok: "Reserva cancelada." };
+}

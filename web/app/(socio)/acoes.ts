@@ -29,3 +29,7 @@ export async function renovar(emprestimoId: number) {
 export async function cancelarPedido(pedidoId: number) {
   return executar(`/api/eu/pedidos/${pedidoId}`, "DELETE", "Pedido cancelado.");
 }
+
+export async function sairDaFila(reservaId: number) {
+  return executar(`/api/eu/reservas/${reservaId}`, "DELETE", "Você saiu da fila.");
+}
