@@ -57,7 +57,7 @@ npm ci
 npm run dev                   # http://localhost:3001 (API_URL aponta para a API; padrão http://localhost:3000)
 ```
 
-Por enquanto ele tem o login, o layout da área do sócio (`/`) e o do bibliotecário (`/painel`); as telas com dados chegam junto com os endpoints da API.
+Por enquanto ele tem o login, a ativação da conta do sócio (`/ativar`), a vitrine do catálogo com busca e filtro por categoria (`/`) e o layout do painel do bibliotecário (`/painel`); as outras telas chegam junto com os endpoints da API.
 
 ## Banco de dados
 
@@ -100,6 +100,8 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | DELETE | `/api/sessoes` | com token | 204; o token deixa de valer |
 | GET | `/api/eu` | com token | `{"login", "papel"}`; 401 sem token válido |
 | POST | `/api/socios/:id/codigo-ativacao` | bibliotecário | 201 com `codigo` (formato `ABCD-2345`) e `expiraEm` (7 dias); um código novo invalida o anterior |
+| GET | `/api/livros?busca=&categoria=` | público | `livros` (id, título, ano, capa, autores, categoria, `disponiveis`, `fila`) e `categorias`; a busca procura no título, no nome do autor e no ISBN, sem diferenciar maiúsculas |
+| GET | `/api/livros/:id` | público | Detalhe com sinopse, editora, autores e exemplares (sem os perdidos); 404 em JSON se não existir |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 
 O banco guarda só o hash SHA-256 do token (tabela `sessao`) e do código de ativação (tabela `codigo_ativacao`), nunca o valor em si. O código é de uso único e fica bloqueado depois de 5 tentativas erradas.

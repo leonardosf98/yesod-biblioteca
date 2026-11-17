@@ -300,6 +300,8 @@ catalogo rota = case rota of
     EditoraR _ -> True
     CategoriasR -> True
     CategoriaR _ -> True
+    ApiLivrosR -> True
+    ApiLivroR _ -> True
     _ -> False
 
 exigirPapel :: Papel -> Handler AuthResult

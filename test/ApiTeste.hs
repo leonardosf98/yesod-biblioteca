@@ -6,9 +6,10 @@ module ApiTeste
     , tokenDaResposta
     , comToken
     , enviarJson
+    , respostaJson
     ) where
 
-import Data.Aeson (FromJSON, Value, decode, encode, object, withObject, (.:), (.=))
+import Data.Aeson (FromJSON, Value (Null), decode, encode, object, withObject, (.:), (.=))
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Types (parseMaybe)
 import Network.Wai.Test (simpleBody)
@@ -43,3 +44,8 @@ comToken token rota metodo = request $ do
     setUrl rota
     addRequestHeader ("Accept", "application/json")
     forM_ token $ \t -> addRequestHeader ("Authorization", "Bearer " <> encodeUtf8 t)
+
+respostaJson :: YesodExample App Value
+respostaJson = do
+    resposta <- getResponse
+    maybe (liftIO (expectationFailure "resposta sem JSON") >> return Null) return (resposta >>= decode . simpleBody)
