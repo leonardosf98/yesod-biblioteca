@@ -1,8 +1,11 @@
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
+import { Sino } from "@/components/notificacoes";
 import { estiloBotao } from "@/components/ui/button";
+import { listarNotificacoes } from "@/lib/notificacoes";
 
-export function TopoPainel({ titulo }: { titulo: string }) {
+export async function TopoPainel({ titulo }: { titulo: string }) {
+  const avisos = await listarNotificacoes(8);
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-borda bg-superficie px-7 py-3.5">
       <h1 className="mr-auto text-lg font-semibold">{titulo}</h1>
@@ -14,6 +17,7 @@ export function TopoPainel({ titulo }: { titulo: string }) {
       <Link href="/painel/balcao" className={estiloBotao({ className: "h-10" })}>
         <Plus className="size-4" aria-hidden />Novo empréstimo
       </Link>
+      <Sino {...avisos} verTodas="/painel/notificacoes" />
     </header>
   );
 }

@@ -2,11 +2,14 @@ import Link from "next/link";
 import { BotaoSair } from "@/components/botao-sair";
 import { LinkNav } from "@/components/link-nav";
 import { Marca } from "@/components/marca";
+import { Sino } from "@/components/notificacoes";
 import { estiloBotao } from "@/components/ui/button";
 import { usuarioAtual } from "@/lib/api";
+import { listarNotificacoes } from "@/lib/notificacoes";
 
 export default async function LayoutSocio({ children }: { children: React.ReactNode }) {
   const usuario = await usuarioAtual();
+  const avisos = usuario ? await listarNotificacoes(8) : null;
 
   return (
     <>
@@ -21,6 +24,7 @@ export default async function LayoutSocio({ children }: { children: React.ReactN
           <div className="ml-auto flex items-center gap-2">
             {usuario ? (
               <>
+                {avisos && <Sino {...avisos} verTodas={usuario.papel === "bibliotecario" ? "/painel/notificacoes" : "/notificacoes"} />}
                 <span className="flex size-11 items-center justify-center rounded-full bg-marca-suave text-sm font-semibold text-marca-forte" title={usuario.login}>
                   {usuario.login.slice(0, 2).toUpperCase()}
                 </span>
