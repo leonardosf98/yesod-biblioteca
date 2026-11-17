@@ -2,8 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Regras.EmprestimoSpec (spec) where
 
-import Data.Either (lefts)
-import Data.Time (addDays, fromGregorian)
+import Data.Time (addDays)
 import Regras.Emprestimo
 import TestImport
 

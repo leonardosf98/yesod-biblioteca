@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Regras.ReservaSpec (spec) where
 
-import Data.Time (fromGregorian)
 import Regras.Emprestimo (realizarEmprestimo)
 import Regras.Reserva
 import TestImport
