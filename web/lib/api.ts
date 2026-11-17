@@ -11,6 +11,7 @@ export class ErroApi extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly campos: Record<string, string> = {},
   ) {
     super(message);
   }
@@ -31,7 +32,7 @@ export async function api<T>(caminho: string, init: RequestInit = {}): Promise<T
   if (resposta.status === 204) return undefined as T;
   const corpo = await resposta.json().catch(() => ({}));
   if (!resposta.ok) {
-    throw new ErroApi(resposta.status, corpo.erro ?? "A API respondeu com erro.");
+    throw new ErroApi(resposta.status, corpo.erro ?? "A API respondeu com erro.", corpo.campos ?? {});
   }
   return corpo as T;
 }
