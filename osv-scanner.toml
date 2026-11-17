@@ -17,3 +17,7 @@ reason = "Oráculo de assinatura Ed25519 do cryptonite; a aplicação não gera 
 [[IgnoredVulns]]
 id = "HSEC-2026-0008"
 reason = "Name Constraints do X.509 só são aplicadas no crypton-x509 1.9.1, que exige crypton 1.1; o yesod-auth e o yesod-static ainda não compilam com crypton 1.1 (yesodweb/yesod#1925 e #1917). Afeta só as chamadas HTTPS de saída para Open Library e ViaCEP. Rever quando o Yesod publicar a correção."
+
+[[IgnoredVulns]]
+id = "HSEC-2026-0016"
+reason = "A correção (crypton-x509-validation 1.10.2) exige crypton 1.1, que o yesod-auth e o yesod-static ainda não aceitam (yesodweb/yesod#1925 e #1917). A falha só aparece ao conectar num IP literal com certificado de CA privada; a app só faz HTTPS por nome de domínio para Open Library e ViaCEP, que usam CAs públicas. Rever junto com o HSEC-2026-0008."
