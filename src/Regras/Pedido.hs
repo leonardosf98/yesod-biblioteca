@@ -7,6 +7,8 @@ module Regras.Pedido
     , pedirLivro
     , cancelarPedido
     , confirmarRetirada
+    , diasRenovacao
+    , renovarEmprestimo
     ) where
 
 import ClassyPrelude.Yesod
@@ -108,3 +110,25 @@ novoCodigo = do
     let alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" :: Text
         letras = T.pack [T.index alfabeto (fromIntegral b `mod` T.length alfabeto) | b <- B.unpack bytes]
     return (T.take 2 letras <> "-" <> T.drop 2 letras)
+
+diasRenovacao :: Integer
+diasRenovacao = 7
+
+renovarEmprestimo :: MonadIO m => SocioId -> EmprestimoId -> Day -> ReaderT SqlBackend m (Either Text Day)
+renovarEmprestimo socioId emprestimoId dia = do
+    encontrado <- get emprestimoId
+    case encontrado of
+        Just e | emprestimoSocioId e == socioId && isNothing (emprestimoDataDevolucao e) -> do
+            bloqueios <- pendencias socioId dia
+            exemplar <- get (emprestimoExemplarId e)
+            fila <- maybe (return []) (filaDeReservas . exemplarLivroId) exemplar
+            case () of
+                _ | emprestimoRenovacoes e > 0 -> return (Left "Esse empréstimo já foi renovado uma vez. Devolva no balcão até o prazo.")
+                  | emprestimoDataPrevista e < dia -> return (Left "O prazo já venceu; devolva no balcão.")
+                  | b : _ <- bloqueios -> return (Left b)
+                  | not (null fila) -> return (Left "Há fila de reservas para esse livro; não dá para renovar.")
+                  | otherwise -> do
+                      let novaData = addDays diasRenovacao (emprestimoDataPrevista e)
+                      update emprestimoId [EmprestimoDataPrevista =. novaData, EmprestimoRenovacoes +=. 1]
+                      return (Right novaData)
+        _ -> return (Left "Empréstimo não encontrado.")

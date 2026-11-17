@@ -105,6 +105,9 @@ A API em JSON fica em `/api` e é a base do novo frontend (história 001). Ela a
 | POST | `/api/livros/:id/pedidos` | sócio | Separa um exemplar e devolve `codigo` e `limiteRetirada` (48 h); 409 com o motivo se houver multa não paga, atraso, limite de 3 livros, livro repetido, fila de outra pessoa ou nenhum exemplar livre |
 | DELETE | `/api/eu/pedidos/:id` | sócio | Cancela o próprio pedido e devolve o exemplar à estante |
 | GET | `/api/eu/emprestimos` | sócio | Empréstimos (com atraso e multa), pedidos aguardando retirada, reservas com a posição na fila, `pendencias`, `emUso` e `limite` |
+| POST | `/api/livros/:id/reservas` | sócio | Entra na fila quando não há exemplar livre; devolve a `posicao` |
+| POST | `/api/eu/emprestimos/:id/renovacao` | sócio | Renova uma vez por mais 7 dias; 409 se já renovado, atrasado, com multa ou atraso pendente, ou com fila para o livro |
+| POST | `/api/emprestimos/:id/pagamento-multa` | bibliotecário | Registra o pagamento da multa (também pelo botão na página do empréstimo); libera pedidos e renovações |
 | POST | `/api/pedidos/:id/retirada` | bibliotecário | Confirma a retirada no balcão e cria o empréstimo de 14 dias; 409 se o pedido venceu |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 

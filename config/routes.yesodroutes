@@ -68,3 +68,7 @@
 /api/eu/pedidos/#PedidoId ApiEuPedidoR DELETE
 /api/eu/emprestimos ApiEuEmprestimosR GET
 /api/pedidos/#PedidoId/retirada ApiPedidoRetiradaR POST
+/api/eu/emprestimos/#EmprestimoId/renovacao ApiEuRenovacaoR POST
+/api/livros/#LivroId/reservas ApiLivroReservasR POST
+/api/emprestimos/#EmprestimoId/pagamento-multa ApiPagamentoMultaR POST
+/emprestimos/#EmprestimoId/pagamento EmprestimoPagamentoR POST
