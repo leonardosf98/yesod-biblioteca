@@ -30,9 +30,10 @@ export type LivroDetalhe = {
   sinopse: string | null;
   capaUrl: string | null;
   editora: string | null;
+  editoraId: number | null;
   categoria: Categoria;
   autores: { id: number; nome: string }[];
-  exemplares: { codigo: string; estado: "bom" | "danificado"; disponivel: boolean }[];
+  exemplares: { id: number; codigo: string; estado: "bom" | "danificado" | "perdido"; disponivel: boolean }[];
   disponiveis: number;
   fila: number;
 };
