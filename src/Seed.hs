@@ -4,6 +4,7 @@ module Seed (popular) where
 
 import ClassyPrelude.Yesod
 import Data.Time (addDays)
+import Database.Persist.Sql (fromSqlKey)
 import Model
 import Model.Tipos
 import Regras.Emprestimo (hoje)
@@ -65,24 +66,27 @@ data LivroExtra = LivroExtra
     , extraAutores :: [(Text, Maybe Text)]
     , extraAno :: Maybe Int
     , extraCategoria :: Text
-    , extraEditora :: Maybe Text
+    , extraEditora :: Maybe (Text, Maybe Text)
+    , extraCapa :: Maybe Text
     , extraExemplares :: Int
     }
 
 acrescentarAcervo :: MonadIO m => ReaderT SqlBackend m ()
-acrescentarAcervo = forM_ (zip [1 :: Int ..] acervo) $ \(n, l) -> do
+acrescentarAcervo = forM_ acervo $ \l -> do
     existente <- selectFirst [LivroTitulo ==. extraTitulo l] []
-    when (isNothing existente) $ do
-        categoria <- either entityKey id <$> insertBy (Categoria (extraCategoria l) Nothing)
-        editora <- forM (extraEditora l) $ \nome ->
-            either entityKey id <$> insertBy (Editora nome (Just "São Paulo"))
-        livro <- insert $ Livro (extraTitulo l) Nothing (extraAno l) Nothing Nothing editora categoria
-        autores <- mapM autorPorNome (extraAutores l)
-        insertMany_ (LivroAutor livro <$> ordNub autores)
-        forM_ [1 .. extraExemplares l] $ \e ->
-            void $ insertBy (Exemplar livro (codigo n e) Bom True)
-  where
-    codigo n e = "AC-" <> (if n < 10 then "0" else "") <> tshow n <> "-" <> tshow e
+    case existente of
+        Just (Entity livro atual) ->
+            when (isNothing (livroCapaUrl atual) && isJust (extraCapa l)) $
+                update livro [LivroCapaUrl =. extraCapa l]
+        Nothing -> do
+            categoria <- either entityKey id <$> insertBy (Categoria (extraCategoria l) Nothing)
+            editora <- forM (extraEditora l) $ \(nome, cidade) ->
+                either entityKey id <$> insertBy (Editora nome cidade)
+            livro <- insert $ Livro (extraTitulo l) Nothing (extraAno l) Nothing (extraCapa l) editora categoria
+            autores <- mapM autorPorNome (extraAutores l)
+            insertMany_ (LivroAutor livro <$> ordNub autores)
+            forM_ [1 .. extraExemplares l] $ \e ->
+                void $ insertBy (Exemplar livro ("LV-" <> tshow (fromSqlKey livro) <> "-" <> tshow e) Bom True)
 
 autorPorNome :: MonadIO m => (Text, Maybe Text) -> ReaderT SqlBackend m AutorId
 autorPorNome (nome, nacionalidade) =
@@ -90,24 +94,47 @@ autorPorNome (nome, nacionalidade) =
 
 acervo :: [LivroExtra]
 acervo =
-    [ romance "Quincas Borba" [machado] 1891 2
-    , romance "Esaú e Jacó" [machado] 1904 1
-    , romance "Memorial de Aires" [machado] 1908 1
-    , romance "Helena" [machado] 1876 1
-    , romance "Iracema" [alencar] 1865 2
-    , romance "O Guarani" [alencar] 1857 1
-    , romance "Senhora" [alencar] 1875 2
-    , romance "O Cortiço" [("Aluísio Azevedo", brasileira)] 1890 3
-    , romance "O Ateneu" [("Raul Pompeia", brasileira)] 1888 1
-    , romance "Triste Fim de Policarpo Quaresma" [("Lima Barreto", brasileira)] 1915 2
-    , romance "Vidas Secas" [graciliano] 1938 3
-    , romance "São Bernardo" [graciliano] 1934 1
-    , romance "Capitães da Areia" [("Jorge Amado", brasileira)] 1937 2
-    , romance "A Hora da Estrela" [("Clarice Lispector", brasileira)] 1977 2
-    , romance "Grande Sertão: Veredas" [("João Guimarães Rosa", brasileira)] 1956 1
-    , romance "Macunaíma" [("Mário de Andrade", brasileira)] 1928 1
-    , romance "Os Maias" [("Eça de Queirós", Just "Portuguesa")] 1888 1
-    , romance "Orgulho e Preconceito" [("Jane Austen", britanica)] 1813 2
+    [ romance 55752 "Dom Casmurro" [machado] (Just 1899) 1
+    , romance 54829 "Memórias Póstumas de Brás Cubas" [machado] (Just 1881) 1
+    , romance 55682 "Quincas Borba" [machado] (Just 1891) 2
+    , romance 56737 "Esaú e Jacó" [machado] (Just 1904) 1
+    , romance 55797 "Memorial de Aires" [machado] (Just 1908) 1
+    , romance 67162 "Helena" [machado] (Just 1876) 1
+    , romance 53101 "A Mão e a Luva" [machado] (Just 1874) 1
+    , romance 67780 "Iaiá Garcia" [machado] (Just 1878) 1
+    , contos 33056 "Histórias sem Data" [machado] (Just 1884) 1
+    , contos 57001 "Papéis Avulsos" [machado] (Just 1882) 2
+    , contos 67935 "Relíquias de Casa Velha" [machado] (Just 1906) 1
+    , poesia 61653 "Poesias Completas" [machado] (Just 1901) 1
+    , romance 67740 "Iracema" [alencar] (Just 1865) 2
+    , romance 67724 "O Guarani" [alencar] (Just 1857) 2
+    , romance 38496 "Ubirajara" [alencar] (Just 1874) 1
+    , romance 44540 "Cinco Minutos" [alencar] (Just 1856) 1
+    , romance 69187 "O Cortiço" [("Aluísio Azevedo", brasileira)] (Just 1890) 3
+    , romance 68541 "O Ateneu" [("Raul Pompeia", brasileira)] (Just 1888) 1
+    , romance 67535 "Triste Fim de Policarpo Quaresma" [("Lima Barreto", brasileira)] (Just 1915) 2
+    , poesia 74854 "Cantos" [("Gonçalves Dias", brasileira)] (Just 1857) 1
+    , contos 2837 "Lendas do Sul" [("Simões Lopes Neto", brasileira)] (Just 1913) 1
+    , romance 40409 "Os Maias" [eca] (Just 1888) 2
+    , romance 42942 "O Primo Basílio" [eca] (Just 1878) 2
+    , romance 31971 "O Crime do Padre Amaro" [eca] (Just 1875) 1
+    , romance 18220 "A Cidade e as Serras" [eca] (Just 1901) 1
+    , romance 23145 "A Ilustre Casa de Ramires" [eca] (Just 1900) 1
+    , romance 16384 "O Mandarim" [eca] (Just 1880) 1
+    , romance 17515 "A Relíquia" [eca] (Just 1887) 1
+    , contos 31347 "Contos" [eca] (Just 1902) 1
+    , romance 16425 "Amor de Perdição" [camilo] (Just 1862) 2
+    , romance 17927 "A Queda dum Anjo" [camilo] (Just 1866) 1
+    , romance 26988 "Amor de Salvação" [camilo] (Just 1864) 1
+    , contos 21406 "Novelas do Minho" [camilo] Nothing 1
+    , romance 29120 "A Morgadinha dos Canaviais" [("Júlio Dinis", portuguesa)] (Just 1868) 1
+    , romance 24401 "Viagens na Minha Terra" [("Almeida Garrett", portuguesa)] (Just 1846) 1
+    , contos 9654 "Lendas e Narrativas" [("Alexandre Herculano", portuguesa)] (Just 1851) 1
+    , poesia 3333 "Os Lusíadas" [("Luís de Camões", portuguesa)] (Just 1572) 2
+    , poesia 17610 "Livro de Mágoas" [("Florbela Espanca", portuguesa)] (Just 1919) 1
+    , poesia 8698 "O Livro de Cesário Verde" [("Cesário Verde", portuguesa)] (Just 1887) 1
+    , poesia 20142 "Sonetos Completos" [("Antero de Quental", portuguesa)] (Just 1886) 1
+    , LivroExtra "Da Terra à Lua" [("Júlio Verne", Just "Francesa")] (Just 1865) "Ficção científica" gutenbergEditora (gutenberg 28341) 1
     , ficcao "1984" [("George Orwell", britanica)] 1949 3
     , ficcao "Admirável Mundo Novo" [("Aldous Huxley", britanica)] 1932 2
     , ficcao "Fundação e Império" [asimov] 1952 1
@@ -139,13 +166,22 @@ acervo =
         (Just 1990) 1
     ]
   where
-    romance t autores ano = LivroExtra t autores (Just ano) "Romance" (Just "Companhia das Letras")
-    ficcao t autores ano = LivroExtra t autores (Just ano) "Ficção científica" (Just "Aleph")
-    tecnico t autores ano = LivroExtra t autores ano "Técnico" Nothing
+    romance = dominioPublico "Romance"
+    contos = dominioPublico "Contos"
+    poesia = dominioPublico "Poesia"
+    dominioPublico categoria pg t autores ano =
+        LivroExtra t autores ano categoria gutenbergEditora (gutenberg pg)
+    ficcao t autores ano = LivroExtra t autores (Just ano) "Ficção científica" (Just ("Aleph", Just "São Paulo")) Nothing
+    tecnico t autores ano = LivroExtra t autores ano "Técnico" Nothing Nothing
+    gutenbergEditora = Just ("Project Gutenberg", Nothing)
+    gutenberg :: Int -> Maybe Text
+    gutenberg pg = Just ("https://www.gutenberg.org/cache/epub/" <> tshow pg <> "/pg" <> tshow pg <> ".cover.medium.jpg")
     brasileira = Just "Brasileira"
+    portuguesa = Just "Portuguesa"
     britanica = Just "Britânica"
     estadunidense = Just "Estadunidense"
     machado = ("Machado de Assis", brasileira)
     alencar = ("José de Alencar", brasileira)
-    graciliano = ("Graciliano Ramos", brasileira)
+    eca = ("Eça de Queirós", portuguesa)
+    camilo = ("Camilo Castelo Branco", portuguesa)
     asimov = ("Isaac Asimov", Just "Estadunidense")
