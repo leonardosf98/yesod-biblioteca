@@ -7,6 +7,7 @@ module ApiTeste
     , comToken
     , enviarJson
     , respostaJson
+    , idDaResposta
     ) where
 
 import Data.Aeson (FromJSON, Value (Null), decode, encode, object, withObject, (.:), (.=))
@@ -49,3 +50,6 @@ respostaJson :: YesodExample App Value
 respostaJson = do
     resposta <- getResponse
     maybe (liftIO (expectationFailure "resposta sem JSON") >> return Null) return (resposta >>= decode . simpleBody)
+
+idDaResposta :: FromJSON k => YesodExample App k
+idDaResposta = campoDaResposta "id" >>= maybe (liftIO (expectationFailure "resposta sem id") >> error "sem id") return
