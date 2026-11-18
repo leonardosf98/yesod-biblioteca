@@ -50,11 +50,12 @@ docker compose up -d          # Postgres na porta 5433, bancos biblioteca e bibl
 stack build                   # o primeiro build baixa o GHC e compila as dependências (demora)
 stack exec biblioteca-seed    # opcional: dados de exemplo; pode rodar de novo sem duplicar
 stack exec biblioteca         # API em http://localhost:3000
+stack exec biblioteca-rotina  # uma passada da rotina: expira pedidos, anda a fila e gera os avisos por horário
 
 cd web && npm ci && npm run dev   # frontend em http://localhost:3001 (API_URL, padrão http://localhost:3000)
 ```
 
-O seed traz 67 livros: obras em domínio público do [Project Gutenberg](https://www.gutenberg.org/) e alguns títulos de ficção científica e técnicos. As capas ficam em `web/public/capas/` e vêm da [Open Library](https://openlibrary.org/).
+O seed traz 68 livros: obras em domínio público do [Project Gutenberg](https://www.gutenberg.org/) e alguns títulos de ficção científica e técnicos. As capas ficam em `web/public/capas/` e vêm da [Open Library](https://openlibrary.org/).
 
 Para criar ou trocar a senha de um bibliotecário:
 
@@ -72,7 +73,9 @@ Sócios são cadastrados pelo bibliotecário no painel; o sócio recebe um códi
 
 A cada push na `main`, a action **Imagens** publica no GHCR `ghcr.io/leonardosf98/biblioteca-api` (binários do Stack sobre Ubuntu 24.04) e `ghcr.io/leonardosf98/biblioteca-web` (Next em modo `standalone`), com as tags `latest` e o SHA curto do commit.
 
-Em produção, uma máquina com Docker roda `deploy/docker-compose.yml`: Postgres, API, Next e Caddy. Só o Caddy expõe portas (80 e 443), e o certificado HTTPS é emitido sozinho para o `DOMINIO`. A API e o banco ficam acessíveis apenas pela rede do compose.
+Em produção, uma máquina com Docker roda `deploy/docker-compose.yml`: Postgres, API, rotina, Next e Caddy. Só o Caddy expõe portas para fora (80 e 443), e o certificado HTTPS é emitido sozinho para o `DOMINIO`. A API escuta só em `127.0.0.1:3000` da máquina (para o Postman por túnel SSH, veja `postman/README.md`) e o banco fica só na rede do compose.
+
+O serviço `rotina` usa a mesma imagem da API e roda `biblioteca-rotina` a cada 5 minutos: expira pedidos vencidos, entrega exemplares livres ao primeiro da fila e gera os avisos `pedido_expirando`, `devolucao_vencendo` e `emprestimo_atrasado`. A chave única das notificações impede aviso repetido. Para disparar na hora (numa apresentação, por exemplo): `docker compose run --rm api biblioteca-rotina`.
 
 ```bash
 mkdir biblioteca && cd biblioteca
@@ -89,7 +92,7 @@ O registro DNS do `DOMINIO` precisa apontar para a máquina antes do `up`, senã
 
 ## Banco de dados
 
-Tabelas definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. Nove são do acervo e da circulação; outras quatro cuidam do acesso e do app do sócio (`user`, `sessao`, `codigo_ativacao`, `pedido`). A tabela `email` vem do scaffold do Yesod e não é usada.
+Tabelas definidas em `config/models.persistentmodels` e criadas pela migração automática do Persistent ao subir a aplicação. Nove são do acervo e da circulação; outras cinco cuidam do acesso e do app do sócio (`user`, `sessao`, `codigo_ativacao`, `pedido`, `notificacao`). A tabela `email` vem do scaffold do Yesod e não é usada.
 
 | Tabela | Para que serve |
 |---|---|
@@ -103,6 +106,7 @@ Tabelas definidas em `config/models.persistentmodels` e criadas pela migração 
 | `emprestimo` | Exemplar + sócio, datas de empréstimo, prevista e de devolução, multa em centavos |
 | `reserva` | Fila de espera de sócio por livro, com status (Ativa, Atendida, Cancelada) |
 | `pedido` | Pedido feito pelo app: exemplar separado, código de retirada, prazo de 48 h e status |
+| `notificacao` | Avisos do sino para sócio e bibliotecário; chave única por usuário + `chave` impede repetição |
 | `user` | Login (bibliotecário ou sócio), senha com hash e vínculo opcional com `socio` |
 | `sessao` | Hash do token de cada sessão da API e a validade |
 | `codigo_ativacao` | Hash do código de ativação do sócio, validade e tentativas |
