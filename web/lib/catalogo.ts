@@ -21,10 +21,11 @@ export type Catalogo = {
   paginas: number;
 };
 
-export function buscarCatalogo(filtros: { busca?: string; categoria?: string; pagina?: string; porPagina?: number }) {
+export function buscarCatalogo(filtros: { busca?: string; categoria?: string; situacao?: string; pagina?: string; porPagina?: number }) {
   const parametros = new URLSearchParams();
   if (filtros.busca) parametros.set("busca", filtros.busca);
   if (filtros.categoria) parametros.set("categoria", filtros.categoria);
+  if (filtros.situacao) parametros.set("situacao", filtros.situacao);
   if (filtros.pagina) parametros.set("pagina", filtros.pagina);
   if (filtros.porPagina) parametros.set("porPagina", String(filtros.porPagina));
   const consulta = parametros.size ? `?${parametros}` : "";

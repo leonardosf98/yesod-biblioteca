@@ -20,10 +20,10 @@ const abas = [
   { id: "categorias", rotulo: "Categorias" },
 ];
 
-type Props = { searchParams: Promise<{ aba?: string; busca?: string; pagina?: string }> };
+type Props = { searchParams: Promise<{ aba?: string; busca?: string; categoria?: string; situacao?: string; pagina?: string }> };
 
 export default async function Acervo({ searchParams }: Props) {
-  const { aba = "livros", busca = "", pagina } = await searchParams;
+  const { aba = "livros", busca = "", categoria = "", situacao = "", pagina } = await searchParams;
   const categorias = await listarCategorias();
 
   return (
@@ -38,7 +38,7 @@ export default async function Acervo({ searchParams }: Props) {
             </Link>
           ))}
         </nav>
-        {aba === "livros" && <AbaLivros busca={busca} pagina={pagina} categorias={categorias} />}
+        {aba === "livros" && <AbaLivros filtros={{ busca, categoria, situacao }} pagina={pagina} categorias={categorias} />}
         {aba === "autores" && <AbaCadastro tipo="autores" itens={(await listarAutores()).map((a) => ({ id: a.id, nome: a.nome, extra: a.nacionalidade, livros: a.livros }))} />}
         {aba === "editoras" && <AbaCadastro tipo="editoras" itens={(await listarEditoras()).map((e) => ({ id: e.id, nome: e.nome, extra: e.cidade, livros: e.livros }))} />}
         {aba === "categorias" && <AbaCadastro tipo="categorias" itens={categorias.map((c) => ({ id: c.id, nome: c.nome, extra: c.descricao, livros: c.livros }))} />}
@@ -47,17 +47,42 @@ export default async function Acervo({ searchParams }: Props) {
   );
 }
 
-async function AbaLivros({ busca, pagina, categorias }: { busca: string; pagina?: string; categorias: { id: number; nome: string }[] }) {
-  const catalogo = await buscarCatalogo({ busca, pagina, porPagina: 25 });
+const situacoes = [
+  { valor: "disponivel", rotulo: "Com exemplar livre" },
+  { valor: "indisponivel", rotulo: "Sem exemplar livre" },
+  { valor: "fila", rotulo: "Com fila" },
+];
+
+const estiloFiltro = "h-11 rounded-xl border border-borda bg-superficie px-3 text-sm outline-none focus:border-marca";
+
+type Filtros = { busca: string; categoria: string; situacao: string };
+
+async function AbaLivros({ filtros, pagina, categorias }: { filtros: Filtros; pagina?: string; categorias: { id: number; nome: string }[] }) {
+  const { busca, categoria, situacao } = filtros;
+  const catalogo = await buscarCatalogo({ busca, categoria, situacao, pagina, porPagina: 25 });
   const { livros } = catalogo;
   return (
     <>
       <div className="flex flex-wrap items-end gap-4">
-        <form className="flex h-11 flex-[1_1_260px] items-center gap-2 rounded-xl border border-borda bg-superficie px-3 focus-within:border-marca sm:max-w-sm">
-          <Search className="size-4 text-texto-suave" aria-hidden />
-          <label htmlFor="busca" className="sr-only">Buscar livro</label>
+        <form className="flex flex-[1_1_520px] flex-wrap items-center gap-2">
           <input type="hidden" name="aba" value="livros" />
-          <input id="busca" name="busca" type="search" defaultValue={busca} placeholder="Título, autor ou ISBN" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-suave" />
+          <div className="flex h-11 flex-[1_1_220px] items-center gap-2 rounded-xl border border-borda bg-superficie px-3 focus-within:border-marca sm:max-w-sm">
+            <Search className="size-4 text-texto-suave" aria-hidden />
+            <label htmlFor="busca" className="sr-only">Buscar livro</label>
+            <input id="busca" name="busca" type="search" defaultValue={busca} placeholder="Título, autor ou ISBN" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-suave" />
+          </div>
+          <label htmlFor="categoria" className="sr-only">Categoria</label>
+          <select id="categoria" name="categoria" defaultValue={categoria} className={estiloFiltro}>
+            <option value="">Todas as categorias</option>
+            {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          <label htmlFor="situacao" className="sr-only">Situação</label>
+          <select id="situacao" name="situacao" defaultValue={situacao} className={estiloFiltro}>
+            <option value="">Qualquer situação</option>
+            {situacoes.map((s) => <option key={s.valor} value={s.valor}>{s.rotulo}</option>)}
+          </select>
+          <button type="submit" className={estiloBotao({ variante: "contorno" })}>Filtrar</button>
+          {(busca || categoria || situacao) && <Link href="/painel/acervo?aba=livros" className="text-sm text-texto-suave hover:text-texto">Limpar</Link>}
         </form>
         <Link href="/painel/acervo/livros/novo" className={estiloBotao({ variante: "contorno" })}><Plus className="size-4" aria-hidden />Novo livro</Link>
         <section aria-label="Importar por ISBN" className="ml-auto rounded-2xl border border-borda bg-superficie p-3">
@@ -87,7 +112,7 @@ async function AbaLivros({ busca, pagina, categorias }: { busca: string; pagina?
           </tbody>
         </table>
       </div>
-      <Paginacao {...catalogo} caminho="/painel/acervo" parametros={{ aba: "livros", busca }} />
+      <Paginacao {...catalogo} caminho="/painel/acervo" parametros={{ aba: "livros", busca, categoria, situacao }} />
     </>
   );
 }
