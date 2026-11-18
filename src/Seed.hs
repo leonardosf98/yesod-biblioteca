@@ -136,29 +136,31 @@ acervo =
     , poesia (Just "o-livro-de-cesario-verde") "O Livro de Cesário Verde" [("Cesário Verde", portuguesa)] (Just 1887) 1
     , poesia (Just "sonetos-completos") "Sonetos Completos" [("Antero de Quental", portuguesa)] (Just 1886) 1
     , LivroExtra "Da Terra à Lua" [("Júlio Verne", Just "Francesa")] (Just 1865) "Ficção científica" gutenbergEditora (capa "da-terra-a-lua") 1
+    , ficcao (Just "eu-robo") "Eu, Robô" [asimov] 1950 1
+    , ficcao (Just "fundacao") "Fundação" [asimov] 1951 1
     , ficcao (Just "1984") "1984" [("George Orwell", britanica)] 1949 3
     , ficcao (Just "admiravel-mundo-novo") "Admirável Mundo Novo" [("Aldous Huxley", britanica)] 1932 2
-    , ficcao Nothing "Fundação e Império" [asimov] 1952 1
-    , ficcao Nothing "Segunda Fundação" [asimov] 1953 1
-    , ficcao Nothing "O Fim da Eternidade" [asimov] 1955 1
-    , ficcao Nothing "Os Próprios Deuses" [asimov] 1972 1
+    , ficcao (Just "fundacao-e-imperio") "Fundação e Império" [asimov] 1952 1
+    , ficcao (Just "segunda-fundacao") "Segunda Fundação" [asimov] 1953 1
+    , ficcao (Just "o-fim-da-eternidade") "O Fim da Eternidade" [asimov] 1955 1
+    , ficcao (Just "os-proprios-deuses") "Os Próprios Deuses" [asimov] 1972 1
     , ficcao (Just "androides-sonham-com-ovelhas-eletricas") "Androides Sonham com Ovelhas Elétricas?" [("Philip K. Dick", estadunidense)] 1968 1
     , ficcao (Just "2001-uma-odisseia-no-espaco") "2001: Uma Odisseia no Espaço" [("Arthur C. Clarke", britanica)] 1968 2
-    , ficcao Nothing "Neuromancer" [("William Gibson", estadunidense)] 1984 1
+    , ficcao (Just "neuromancer") "Neuromancer" [("William Gibson", estadunidense)] 1984 1
     , ficcao (Just "a-mao-esquerda-da-escuridao") "A Mão Esquerda da Escuridão" [("Ursula K. Le Guin", estadunidense)] 1969 1
     , ficcao (Just "duna") "Duna" [("Frank Herbert", estadunidense)] 1965 3
-    , ficcao Nothing "Fahrenheit 451" [("Ray Bradbury", estadunidense)] 1953 2
-    , ficcao Nothing "Frankenstein" [("Mary Shelley", britanica)] 1818 1
+    , ficcao (Just "fahrenheit-451") "Fahrenheit 451" [("Ray Bradbury", estadunidense)] 1953 2
+    , ficcao (Just "frankenstein") "Frankenstein" [("Mary Shelley", britanica)] 1818 1
     , ficcao (Just "a-maquina-do-tempo") "A Máquina do Tempo" [("H. G. Wells", britanica)] 1895 1
-    , tecnico Nothing "Estrutura e Interpretação de Programas de Computador"
+    , tecnico (Just "estrutura-e-interpretacao-de-programas-de-computador") "Estrutura e Interpretação de Programas de Computador"
         [("Harold Abelson", estadunidense), ("Gerald Jay Sussman", estadunidense)] (Just 1985) 1
-    , tecnico Nothing "Programming in Haskell" [("Graham Hutton", britanica)] (Just 2007) 1
-    , tecnico Nothing "Learn You a Haskell for Great Good!" [("Miran Lipovača", Nothing)] (Just 2011) 1
+    , tecnico (Just "programming-in-haskell") "Programming in Haskell" [("Graham Hutton", britanica)] (Just 2007) 1
+    , tecnico (Just "learn-you-a-haskell") "Learn You a Haskell for Great Good!" [("Miran Lipovača", Nothing)] (Just 2011) 1
     , tecnico Nothing "Haskell: Uma Introdução à Programação Funcional"
         [("Alexandre Garcia de Oliveira", brasileira)] Nothing 2
     , tecnico (Just "codigo-limpo") "Código Limpo" [("Robert C. Martin", estadunidense)] (Just 2008) 2
-    , tecnico Nothing "O Programador Pragmático" [("Andrew Hunt", Nothing), ("David Thomas", Nothing)] (Just 1999) 1
-    , tecnico Nothing "Padrões de Projeto"
+    , tecnico (Just "o-programador-pragmatico") "O Programador Pragmático" [("Andrew Hunt", Nothing), ("David Thomas", Nothing)] (Just 1999) 1
+    , tecnico (Just "padroes-de-projeto") "Padrões de Projeto"
         [("Erich Gamma", Nothing), ("Richard Helm", Nothing), ("Ralph Johnson", Nothing), ("John Vlissides", Nothing)]
         (Just 1994) 1
     , tecnico (Just "entendendo-algoritmos") "Entendendo Algoritmos" [("Aditya Bhargava", Nothing)] (Just 2016) 2
