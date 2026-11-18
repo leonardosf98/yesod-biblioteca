@@ -110,6 +110,7 @@ acervo =
     , romance (Just "o-guarani") "O Guarani" [alencar] (Just 1857) 2
     , romance (Just "ubirajara") "Ubirajara" [alencar] (Just 1874) 1
     , romance (Just "cinco-minutos") "Cinco Minutos" [alencar] (Just 1856) 1
+    , romance (Just "a-viuvinha") "A Viuvinha" [alencar] (Just 1860) 1
     , romance (Just "o-cortico") "O Cortiço" [("Aluísio Azevedo", brasileira)] (Just 1890) 3
     , romance (Just "o-ateneu") "O Ateneu" [("Raul Pompeia", brasileira)] (Just 1888) 1
     , romance (Just "triste-fim-de-policarpo-quaresma") "Triste Fim de Policarpo Quaresma" [("Lima Barreto", brasileira)] (Just 1915) 2
@@ -118,7 +119,7 @@ acervo =
     , romance (Just "os-maias") "Os Maias" [eca] (Just 1888) 2
     , romance (Just "o-primo-basilio") "O Primo Basílio" [eca] (Just 1878) 2
     , romance (Just "o-crime-do-padre-amaro") "O Crime do Padre Amaro" [eca] (Just 1875) 1
-    , romance Nothing "A Cidade e as Serras" [eca] (Just 1901) 1
+    , romance (Just "a-cidade-e-as-serras") "A Cidade e as Serras" [eca] (Just 1901) 1
     , romance (Just "a-ilustre-casa-de-ramires") "A Ilustre Casa de Ramires" [eca] (Just 1900) 1
     , romance (Just "o-mandarim") "O Mandarim" [eca] (Just 1880) 1
     , romance (Just "a-reliquia") "A Relíquia" [eca] (Just 1887) 1
@@ -135,33 +136,33 @@ acervo =
     , poesia (Just "o-livro-de-cesario-verde") "O Livro de Cesário Verde" [("Cesário Verde", portuguesa)] (Just 1887) 1
     , poesia (Just "sonetos-completos") "Sonetos Completos" [("Antero de Quental", portuguesa)] (Just 1886) 1
     , LivroExtra "Da Terra à Lua" [("Júlio Verne", Just "Francesa")] (Just 1865) "Ficção científica" gutenbergEditora (capa "da-terra-a-lua") 1
-    , ficcao "1984" [("George Orwell", britanica)] 1949 3
-    , ficcao "Admirável Mundo Novo" [("Aldous Huxley", britanica)] 1932 2
-    , ficcao "Fundação e Império" [asimov] 1952 1
-    , ficcao "Segunda Fundação" [asimov] 1953 1
-    , ficcao "O Fim da Eternidade" [asimov] 1955 1
-    , ficcao "Os Próprios Deuses" [asimov] 1972 1
-    , ficcao "Androides Sonham com Ovelhas Elétricas?" [("Philip K. Dick", estadunidense)] 1968 1
-    , ficcao "2001: Uma Odisseia no Espaço" [("Arthur C. Clarke", britanica)] 1968 2
-    , ficcao "Neuromancer" [("William Gibson", estadunidense)] 1984 1
-    , ficcao "A Mão Esquerda da Escuridão" [("Ursula K. Le Guin", estadunidense)] 1969 1
-    , ficcao "Duna" [("Frank Herbert", estadunidense)] 1965 3
-    , ficcao "Fahrenheit 451" [("Ray Bradbury", estadunidense)] 1953 2
-    , ficcao "Frankenstein" [("Mary Shelley", britanica)] 1818 1
-    , ficcao "A Máquina do Tempo" [("H. G. Wells", britanica)] 1895 1
-    , tecnico "Estrutura e Interpretação de Programas de Computador"
+    , ficcao (Just "1984") "1984" [("George Orwell", britanica)] 1949 3
+    , ficcao (Just "admiravel-mundo-novo") "Admirável Mundo Novo" [("Aldous Huxley", britanica)] 1932 2
+    , ficcao Nothing "Fundação e Império" [asimov] 1952 1
+    , ficcao Nothing "Segunda Fundação" [asimov] 1953 1
+    , ficcao Nothing "O Fim da Eternidade" [asimov] 1955 1
+    , ficcao Nothing "Os Próprios Deuses" [asimov] 1972 1
+    , ficcao (Just "androides-sonham-com-ovelhas-eletricas") "Androides Sonham com Ovelhas Elétricas?" [("Philip K. Dick", estadunidense)] 1968 1
+    , ficcao (Just "2001-uma-odisseia-no-espaco") "2001: Uma Odisseia no Espaço" [("Arthur C. Clarke", britanica)] 1968 2
+    , ficcao Nothing "Neuromancer" [("William Gibson", estadunidense)] 1984 1
+    , ficcao (Just "a-mao-esquerda-da-escuridao") "A Mão Esquerda da Escuridão" [("Ursula K. Le Guin", estadunidense)] 1969 1
+    , ficcao (Just "duna") "Duna" [("Frank Herbert", estadunidense)] 1965 3
+    , ficcao Nothing "Fahrenheit 451" [("Ray Bradbury", estadunidense)] 1953 2
+    , ficcao Nothing "Frankenstein" [("Mary Shelley", britanica)] 1818 1
+    , ficcao (Just "a-maquina-do-tempo") "A Máquina do Tempo" [("H. G. Wells", britanica)] 1895 1
+    , tecnico Nothing "Estrutura e Interpretação de Programas de Computador"
         [("Harold Abelson", estadunidense), ("Gerald Jay Sussman", estadunidense)] (Just 1985) 1
-    , tecnico "Programming in Haskell" [("Graham Hutton", britanica)] (Just 2007) 1
-    , tecnico "Learn You a Haskell for Great Good!" [("Miran Lipovača", Nothing)] (Just 2011) 1
-    , tecnico "Haskell: Uma Introdução à Programação Funcional"
+    , tecnico Nothing "Programming in Haskell" [("Graham Hutton", britanica)] (Just 2007) 1
+    , tecnico Nothing "Learn You a Haskell for Great Good!" [("Miran Lipovača", Nothing)] (Just 2011) 1
+    , tecnico Nothing "Haskell: Uma Introdução à Programação Funcional"
         [("Alexandre Garcia de Oliveira", brasileira)] Nothing 2
-    , tecnico "Código Limpo" [("Robert C. Martin", estadunidense)] (Just 2008) 2
-    , tecnico "O Programador Pragmático" [("Andrew Hunt", Nothing), ("David Thomas", Nothing)] (Just 1999) 1
-    , tecnico "Padrões de Projeto"
+    , tecnico (Just "codigo-limpo") "Código Limpo" [("Robert C. Martin", estadunidense)] (Just 2008) 2
+    , tecnico Nothing "O Programador Pragmático" [("Andrew Hunt", Nothing), ("David Thomas", Nothing)] (Just 1999) 1
+    , tecnico Nothing "Padrões de Projeto"
         [("Erich Gamma", Nothing), ("Richard Helm", Nothing), ("Ralph Johnson", Nothing), ("John Vlissides", Nothing)]
         (Just 1994) 1
-    , tecnico "Entendendo Algoritmos" [("Aditya Bhargava", Nothing)] (Just 2016) 2
-    , tecnico "Algoritmos: Teoria e Prática"
+    , tecnico (Just "entendendo-algoritmos") "Entendendo Algoritmos" [("Aditya Bhargava", Nothing)] (Just 2016) 2
+    , tecnico (Just "algoritmos-teoria-e-pratica") "Algoritmos: Teoria e Prática"
         [("Thomas H. Cormen", estadunidense), ("Charles E. Leiserson", estadunidense), ("Ronald L. Rivest", estadunidense), ("Clifford Stein", estadunidense)]
         (Just 1990) 1
     ]
@@ -171,8 +172,8 @@ acervo =
     poesia = dominioPublico "Poesia"
     dominioPublico categoria arquivo t autores ano =
         LivroExtra t autores ano categoria gutenbergEditora (arquivo >>= capa)
-    ficcao t autores ano = LivroExtra t autores (Just ano) "Ficção científica" (Just ("Aleph", Just "São Paulo")) Nothing
-    tecnico t autores ano = LivroExtra t autores ano "Técnico" Nothing Nothing
+    ficcao arquivo t autores ano = LivroExtra t autores (Just ano) "Ficção científica" (Just ("Aleph", Just "São Paulo")) (arquivo >>= capa)
+    tecnico arquivo t autores ano = LivroExtra t autores ano "Técnico" Nothing (arquivo >>= capa)
     gutenbergEditora = Just ("Project Gutenberg", Nothing)
     capa :: Text -> Maybe Text
     capa arquivo = Just ("/capas/" <> arquivo <> ".jpg")

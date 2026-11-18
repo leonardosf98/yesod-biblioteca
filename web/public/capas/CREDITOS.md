@@ -1,14 +1,11 @@
 # Capas de primeira edição
 
-Imagens do Wikimedia Commons. As demais capas desta pasta vêm da Open Library.
+Imagens do Wikimedia Commons. As capas de ficção científica, dos livros técnicos e as edições modernas de Machado, Camilo e Eça foram escolhidas à mão; as demais vêm da Open Library.
 
 | Arquivo | Origem | Licença |
 |---|---|---|
-| dom-casmurro.jpg | [DomCasmurroMachadodeAssis.jpg](https://commons.wikimedia.org/wiki/File:DomCasmurroMachadodeAssis.jpg) | Public domain |
-| esau-e-jaco.jpg | [Esau e Jaco.jpg](https://commons.wikimedia.org/wiki/File:Esau_e_Jaco.jpg) | Public domain |
 | memorial-de-aires.jpg | [Memorial de aires by Machado de Assis 1a edicao.png](https://commons.wikimedia.org/wiki/File:Memorial_de_aires_by_Machado_de_Assis_1a_edicao.png) | Public domain |
 | helena.jpg | [Helena - Machado de Assis (Capa da 1ª edição).jpg](https://commons.wikimedia.org/wiki/File:Helena_-_Machado_de_Assis_(Capa_da_1%C2%AA_edi%C3%A7%C3%A3o).jpg) | Public domain |
-| a-mao-e-a-luva.jpg | [A mao e a luva 1a edicao.png](https://commons.wikimedia.org/wiki/File:A_mao_e_a_luva_1a_edicao.png) | Public domain |
 | historias-sem-data.jpg | [Histórias sem Data.png](https://commons.wikimedia.org/wiki/File:Hist%C3%B3rias_sem_Data.png) | Public domain |
 | reliquias-de-casa-velha.jpg | [Relíquias de Casa Velha - Machado de Assis (Capa da 1ª edição).jpg](https://commons.wikimedia.org/wiki/File:Rel%C3%ADquias_de_Casa_Velha_-_Machado_de_Assis_(Capa_da_1%C2%AA_edi%C3%A7%C3%A3o).jpg) | Public domain |
 | iracema.jpg | [Iracema primeira edicao.png](https://commons.wikimedia.org/wiki/File:Iracema_primeira_edicao.png) | Public domain |
