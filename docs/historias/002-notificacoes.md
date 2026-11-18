@@ -8,15 +8,19 @@
 
 | Tipo (`tipo`) | Para quem | Quando nasce | Link sugerido |
 |---|---|---|---|
-| `fila_disponivel` | Sócio | Na devolução, quando o exemplar vai para o próximo da fila | `/emprestimos` |
+| `fila_disponivel` | Sócio | Um exemplar fica livre (devolução, pedido expirado ou cancelado, exemplar novo) e o sócio é o primeiro da fila que pode pegar: o exemplar já fica separado num pedido de 48 h | `/emprestimos` |
 | `pedido_expirando` | Sócio | Rotina: faltam 6 h para o pedido expirar | `/emprestimos` |
-| `pedido_expirado` | Sócio | Rotina ou expiração do pedido | `/livros/{id}` |
-| `pedido_cancelado` | Sócio | Bibliotecário cancela o pedido no painel | `/livros/{id}` |
+| `pedido_expirado` | Sócio | O prazo de retirada venceu; o exemplar passa para o próximo da fila | `/livros/{id}` |
+| `pedido_cancelado` | Sócio | Bibliotecário cancela o pedido no painel (`DELETE /api/pedidos/{id}`); quando o próprio sócio cancela, não há aviso | `/livros/{id}` |
 | `devolucao_vencendo` | Sócio | Rotina: a devolução vence amanhã | `/emprestimos` |
 | `emprestimo_atrasado` | Sócio | Rotina: uma vez por dia enquanto houver atraso, com a multa prevista no texto | `/emprestimos` |
 | `pedido_novo` | Bibliotecários | Sócio faz um pedido | `/painel/pedidos` |
 
-Os eventos por horário saem do executável `biblioteca-rotina` (uma passada e termina), chamado em loop por um serviço do compose. A tabela tem chave única por tipo + referência (empréstimo, pedido ou reserva) + dia, para a rotina poder rodar várias vezes sem repetir aviso.
+Os eventos por horário saem do executável `biblioteca-rotina` (uma passada e termina), chamado em loop por um serviço do compose. A tabela tem chave única por usuário + `chave`, um texto como `pedido_expirando:pedido:12` ou `emprestimo_atrasado:emprestimo:7:2026-11-18` (só o atraso leva o dia), para a rotina poder rodar várias vezes sem repetir aviso.
+
+### Fila
+
+Quando um exemplar fica livre, a fila anda sozinha: o primeiro sócio da fila sem bloqueio (atraso, multa, limite de livros ou o mesmo livro em mãos) recebe um pedido com o exemplar separado e a reserva vira `Atendida`. Quem está bloqueado continua na fila e é pulado. Se o pedido vencer, o exemplar vai para o próximo.
 
 ## Contrato da API
 
@@ -54,6 +58,10 @@ Marca uma como lida. Responde `204`. Se a notificação for de outro usuário, `
 ### `POST /api/notificacoes/leitura`
 
 Marca todas do usuário como lidas. Responde `204`.
+
+## Implementação
+
+- Tabela `Notificacao` em `config/models.persistentmodels`; regras em `src/Regras/Notificacao.hs` e `src/Regras/Pedido.hs` (`atenderFila`, `cancelarPedidoNoBalcao`); rotas em `src/Handler/ApiNotificacao.hs`.
 
 ## Front (já implementado)
 

@@ -16,7 +16,7 @@ import Data.Time (diffDays)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Regras.Emprestimo
-import Regras.Pedido (expirarPedidos, pendencias)
+import Regras.Pedido (atenderFila, expirarPedidos, pendencias)
 
 data Nomes = Nomes
     { nomesSocios :: Map SocioId Text
@@ -151,7 +151,14 @@ postApiEmprestimosR = do
 postApiDevolucaoR :: EmprestimoId -> Handler Value
 postApiDevolucaoR emprestimoId = do
     dia <- hoje
-    resultado <- runDB $ registrarDevolucao emprestimoId dia
+    agora <- liftIO getCurrentTime
+    resultado <- runDB $ do
+        resultado <- registrarDevolucao emprestimoId dia
+        forM_ (either (const Nothing) Just resultado) $ \_ -> do
+            emprestimo <- getJust emprestimoId
+            exemplar <- getJust (emprestimoExemplarId emprestimo)
+            atenderFila (exemplarLivroId exemplar) agora
+        return resultado
     case resultado of
         Left motivo -> sendStatusJSON status409 $ object ["erro" .= motivo]
         Right multa -> returnJson $ object ["multaCentavos" .= multa]

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { confirmarRetirada } from "@/app/painel/acoes";
+import { cancelarPedidoNoBalcao, confirmarRetirada } from "@/app/painel/acoes";
 import { BotaoAcao } from "@/components/botao-acao";
 import { TopoPainel } from "@/components/topo-painel";
 import { dataHora } from "@/lib/formato";
@@ -27,7 +27,12 @@ export default async function Pedidos() {
                   <td className="px-4 py-3 font-mono">{p.exemplar}</td>
                   <td className="px-4 py-3 text-texto-suave">{dataHora(p.criadoEm)}</td>
                   <td className="px-4 py-3">{dataHora(p.limiteRetirada)}</td>
-                  <td className="px-4 py-2"><BotaoAcao acao={confirmarRetirada.bind(null, p.id)} rotulo="Confirmar retirada" pendente="Confirmando…" variante="contorno" /></td>
+                  <td className="px-4 py-2">
+                    <div className="flex justify-end gap-2">
+                      <BotaoAcao acao={confirmarRetirada.bind(null, p.id)} rotulo="Confirmar retirada" pendente="Confirmando…" variante="contorno" />
+                      <BotaoAcao acao={cancelarPedidoNoBalcao.bind(null, p.id)} rotulo="Cancelar" pendente="Cancelando…" variante="fantasma" confirmar={`Cancelar o pedido ${p.codigo}? O sócio será avisado.`} />
+                    </div>
+                  </td>
                 </tr>
               ))}
               {pedidos.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-texto-suave">Nenhum pedido aguardando retirada.</td></tr>}

@@ -45,7 +45,7 @@ instance Yesod App where
     isAuthorized rota escrita
         | rotaLivre rota = return Authorized
         | not escrita && catalogo rota = return Authorized
-        | rota == ApiEuR = exigirLogin
+        | rota == ApiEuR || rotaDeNotificacao rota = exigirLogin
         | rotaDoSocio rota = exigirPapel PapelSocio
         | otherwise = exigirPapel PapelBibliotecario
 
@@ -87,6 +87,13 @@ catalogo rota = case rota of
     ApiAutoresR -> True
     ApiEditorasR -> True
     ApiCategoriasR -> True
+    _ -> False
+
+rotaDeNotificacao :: Route App -> Bool
+rotaDeNotificacao rota = case rota of
+    ApiNotificacoesR -> True
+    ApiNotificacoesLeituraR -> True
+    ApiNotificacaoLeituraR _ -> True
     _ -> False
 
 rotaDoSocio :: Route App -> Bool

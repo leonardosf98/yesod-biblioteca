@@ -13,6 +13,7 @@
 /api/eu/pedidos/#PedidoId ApiEuPedidoR DELETE
 /api/eu/emprestimos ApiEuEmprestimosR GET
 /api/pedidos/#PedidoId/retirada ApiPedidoRetiradaR POST
+/api/pedidos/#PedidoId ApiPedidoR DELETE
 /api/eu/emprestimos/#EmprestimoId/renovacao ApiEuRenovacaoR POST
 /api/livros/#LivroId/reservas ApiLivroReservasR POST
 /api/emprestimos/#EmprestimoId/pagamento-multa ApiPagamentoMultaR POST
@@ -33,3 +34,6 @@
 /api/exemplares/#ExemplarId ApiExemplarR PUT DELETE
 /api/eu/reservas/#ReservaId ApiEuReservaR DELETE
 /api/reservas/#ReservaId ApiReservaR DELETE
+/api/notificacoes ApiNotificacoesR GET
+/api/notificacoes/leitura ApiNotificacoesLeituraR POST
+/api/notificacoes/#NotificacaoId/leitura ApiNotificacaoLeituraR POST
