@@ -1,0 +1,1489 @@
+{
+  "info": {
+    "_postman_id": "2f637273-1231-5c9c-89ce-306113174016",
+    "name": "Biblioteca (Yesod)",
+    "description": "API da biblioteca. Rode primeiro as duas requisições de **Sessão**: elas guardam `tokenBibliotecario` e `tokenSocio` no ambiente, e cada pasta usa o token do seu perfil. As requisições que criam algo guardam o id devolvido (`livroId`, `pedidoId`, `emprestimoId`...) para as próximas usarem.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sessão",
+      "item": [
+        {
+          "name": "Entrar como bibliotecário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{loginBibliotecario}}\",\n  \"senha\": \"{{senhaBibliotecario}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login aceito\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"tokenBibliotecario\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Entrar como sócio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessoes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{loginSocio}}\",\n  \"senha\": \"{{senhaSocio}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login aceito\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"tokenSocio\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu (bibliotecário)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenBibliotecario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quem sou eu (sócio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSocio}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sair (sócio)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sessoes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSocio}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "Listar livros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros?busca=machado&categoria={{categoriaId}}&situacao=disponivel&pagina=1&porPagina=24",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros"
+              ],
+              "query": [
+                {
+                  "key": "busca",
+                  "value": "machado",
+                  "disabled": true
+                },
+                {
+                  "key": "categoria",
+                  "value": "{{categoriaId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "situacao",
+                  "value": "disponivel",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "porPagina",
+                  "value": "24",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Filtros opcionais: `busca` (título, autor ou ISBN), `categoria` (id), `situacao` (`disponivel`, `indisponivel`, `fila`), `pagina` e `porPagina` (máx. 100)."
+          }
+        },
+        {
+          "name": "Detalhe do livro",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenSocio}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sócio",
+      "item": [
+        {
+          "name": "Pedir para retirar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}",
+                "pedidos"
+              ]
+            },
+            "description": "Separa um exemplar livre. `409` se não houver exemplar, se o sócio tiver atraso ou já tiver pedido aberto."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"pedidoId\", String(corpo.id));",
+                  "if (corpo.codigo !== undefined) pm.environment.set(\"pedidoCodigo\", String(corpo.codigo));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar meu pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Meus empréstimos, pedidos e reservas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu/emprestimos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu",
+                "emprestimos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Renovar empréstimo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu/emprestimos/{{emprestimoId}}/renovacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu",
+                "emprestimos",
+                "{{emprestimoId}}",
+                "renovacao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Entrar na fila",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}",
+                "reservas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"reservaId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sair da fila",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eu/reservas/{{reservaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eu",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenSocio}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Notificações (história 002)",
+      "item": [
+        {
+          "name": "Minhas notificações",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificacoes?limite=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificacoes"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "20",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar uma como lida",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificacoes/{{notificacaoId}}/leitura",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificacoes",
+                "{{notificacaoId}}",
+                "leitura"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar todas como lidas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notificacoes/leitura",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificacoes",
+                "leitura"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenSocio}}",
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Contrato em `docs/historias/002-notificacoes.md`. Enquanto o back não existir, respondem `404`."
+    },
+    {
+      "name": "Balcão",
+      "item": [
+        {
+          "name": "Resumo do painel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/painel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "painel"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar exemplar pelo código",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/balcao/exemplares/{{exemplarCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "balcao",
+                "exemplares",
+                "{{exemplarCodigo}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirmar retirada do pedido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/retirada",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "retirada"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.emprestimoId !== undefined) pm.environment.set(\"emprestimoId\", String(corpo.emprestimoId));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Novo empréstimo direto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/emprestimos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "emprestimos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"socioId\": {{socioId}},\n  \"exemplarId\": {{exemplarId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"emprestimoId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar devolução",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/devolucao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "emprestimos",
+                "{{emprestimoId}}",
+                "devolucao"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar pagamento da multa",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/pagamento-multa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "emprestimos",
+                "{{emprestimoId}}",
+                "pagamento-multa"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar reserva de um sócio",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenBibliotecario}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sócios",
+      "item": [
+        {
+          "name": "Buscar sócios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios?busca=ana",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios"
+              ],
+              "query": [
+                {
+                  "key": "busca",
+                  "value": "ana",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar sócio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carla Mendes\",\n  \"email\": \"carla@example.com\",\n  \"telefone\": \"11988887777\",\n  \"cep\": \"01310100\",\n  \"numero\": \"1578\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "O endereço é completado pelo ViaCEP a partir do `cep`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"socioId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhe do sócio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios/{{socioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios",
+                "{{socioId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar sócio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios/{{socioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios",
+                "{{socioId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carla Mendes\",\n  \"email\": \"carla@example.com\",\n  \"telefone\": \"11988887777\",\n  \"cep\": \"01310100\",\n  \"numero\": \"1578\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir sócio",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios/{{socioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios",
+                "{{socioId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Gerar código de ativação",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/socios/{{socioId}}/codigo-ativacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "socios",
+                "{{socioId}}",
+                "codigo-ativacao"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.codigo !== undefined) pm.environment.set(\"codigoAtivacao\", String(corpo.codigo));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ativar conta (sócio define a senha)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ativacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ativacao"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carla@example.com\",\n  \"codigo\": \"{{codigoAtivacao}}\",\n  \"senha\": \"uma senha forte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenBibliotecario}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Acervo",
+      "item": [
+        {
+          "name": "Cadastrar livro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Grande Sertão: Veredas\",\n  \"isbn\": \"9788535908770\",\n  \"ano\": 1956,\n  \"sinopse\": \"Riobaldo conta sua vida de jagunço.\",\n  \"capaUrl\": null,\n  \"editoraId\": {{editoraId}},\n  \"categoriaId\": {{categoriaId}},\n  \"autores\": [\n    {{autorId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"livroId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar livro",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Grande Sertão: Veredas\",\n  \"isbn\": \"9788535908770\",\n  \"ano\": 1956,\n  \"sinopse\": \"Riobaldo conta sua vida de jagunço.\",\n  \"capaUrl\": null,\n  \"editoraId\": {{editoraId}},\n  \"categoriaId\": {{categoriaId}},\n  \"autores\": [\n    {{autorId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir livro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Importar da Open Library",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/importacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "importacao"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"978-85-359-1066-7\",\n  \"categoriaId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"livroId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar exemplar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/livros/{{livroId}}/exemplares",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "livros",
+                "{{livroId}}",
+                "exemplares"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"bom\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "`codigo` é opcional; sem ele a API gera um."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"exemplarId\", String(corpo.id));",
+                  "if (corpo.codigo !== undefined) pm.environment.set(\"exemplarCodigo\", String(corpo.codigo));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar exemplar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/exemplares/{{exemplarId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "exemplares",
+                "{{exemplarId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"danificado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir exemplar",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/exemplares/{{exemplarId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "exemplares",
+                "{{exemplarId}}"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenBibliotecario}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cadastros",
+      "item": [
+        {
+          "name": "Listar autores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/autores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "autores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar autor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/autores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "autores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Guimarães Rosa\",\n  \"nacionalidade\": \"Brasileira\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"autorId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar autor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/autores/{{autorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "autores",
+                "{{autorId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Guimarães Rosa\",\n  \"nacionalidade\": \"Brasileira\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir autor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/autores/{{autorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "autores",
+                "{{autorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar editoras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/editoras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "editoras"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar editora",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/editoras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "editoras"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Nova Fronteira\",\n  \"cidade\": \"Rio de Janeiro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"editoraId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar editora",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/editoras/{{editoraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "editoras",
+                "{{editoraId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Nova Fronteira\",\n  \"cidade\": \"Rio de Janeiro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir editora",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/editoras/{{editoraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "editoras",
+                "{{editoraId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categorias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categorias"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Regionalismo\",\n  \"descricao\": \"Romances do sertão\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const corpo = pm.response.json();",
+                  "if (corpo.id !== undefined) pm.environment.set(\"categoriaId\", String(corpo.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar categoria",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Regionalismo\",\n  \"descricao\": \"Romances regionalistas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Excluir categoria",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            }
+          }
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenBibliotecario}}",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}
