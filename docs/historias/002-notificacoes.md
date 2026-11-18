@@ -61,7 +61,7 @@ Marca todas do usuário como lidas. Responde `204`.
 
 ## Implementação
 
-- Tabela `Notificacao` em `config/models.persistentmodels`; regras em `src/Regras/Notificacao.hs` e `src/Regras/Pedido.hs` (`atenderFila`, `cancelarPedidoNoBalcao`); rotas em `src/Handler/ApiNotificacao.hs`.
+- Tabela `Notificacao` em `config/models.persistentmodels`; rotina em `src/Rotina.hs` (executável `biblioteca-rotina`, serviço `rotina` do compose a cada 5 minutos); regras em `src/Regras/Notificacao.hs` e `src/Regras/Pedido.hs` (`atenderFila`, `cancelarPedidoNoBalcao`); rotas em `src/Handler/ApiNotificacao.hs`.
 
 ## Front (já implementado)
 

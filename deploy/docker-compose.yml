@@ -32,6 +32,22 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  rotina:
+    image: ghcr.io/leonardosf98/biblioteca-api:${TAG:-latest}
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do biblioteca-rotina; sleep 300; done"]
+    environment:
+      YESOD_PGHOST: db
+      YESOD_PGPORT: "5432"
+      YESOD_PGUSER: biblioteca
+      YESOD_PGPASS: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      YESOD_PGDATABASE: biblioteca
+    depends_on:
+      api:
+        condition: service_started
+    security_opt:
+      - no-new-privileges:true
+
   web:
     image: ghcr.io/leonardosf98/biblioteca-web:${TAG:-latest}
     restart: unless-stopped

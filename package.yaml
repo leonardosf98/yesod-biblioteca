@@ -80,6 +80,12 @@ executables:
     other-modules: []
     dependencies:
     - biblioteca
+  biblioteca-rotina:
+    main: rotina.hs
+    source-dirs: app
+    other-modules: []
+    dependencies:
+    - biblioteca
   biblioteca-usuario:
     main: usuario.hs
     source-dirs: app
