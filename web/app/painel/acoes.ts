@@ -20,6 +20,16 @@ export async function confirmarRetirada(pedidoId: number) {
   return executar<{ dataPrevista: string }>(`/api/pedidos/${pedidoId}/retirada`, undefined, () => "Retirada confirmada.");
 }
 
+export async function cancelarPedidoNoBalcao(pedidoId: number): Promise<ResultadoAcao> {
+  try {
+    await api(`/api/pedidos/${pedidoId}`, { method: "DELETE" });
+  } catch (erro) {
+    return { erro: erro instanceof ErroApi ? erro.message : "Não foi possível falar com o servidor." };
+  }
+  revalidatePath("/painel", "layout");
+  return { ok: "Pedido cancelado." };
+}
+
 export async function registrarEmprestimo(socioId: number, exemplarId: number, codigo: string): Promise<ResultadoAcao> {
   const resultado = await executar("/api/emprestimos", { socioId, exemplarId }, () => "");
   if (resultado.erro) return resultado;

@@ -5,6 +5,7 @@ module Handler.ApiPedido
     , deleteApiEuPedidoR
     , getApiEuEmprestimosR
     , postApiPedidoRetiradaR
+    , deleteApiPedidoR
     , postApiEuRenovacaoR
     , postApiLivroReservasR
     , postApiPagamentoMultaR
@@ -58,6 +59,11 @@ postApiPedidoRetiradaR pedidoId = do
             emprestimo <- runDB $ getJust emprestimoId
             sendStatusJSON status201 $ object
                 ["emprestimoId" .= emprestimoId, "dataPrevista" .= emprestimoDataPrevista emprestimo]
+
+deleteApiPedidoR :: PedidoId -> Handler Value
+deleteApiPedidoR pedidoId = do
+    resultado <- runDB $ get404 pedidoId >> cancelarPedidoNoBalcao pedidoId
+    either (recusar status409) (const (sendResponseStatus status204 ())) resultado
 
 getApiEuEmprestimosR :: Handler Value
 getApiEuEmprestimosR = do

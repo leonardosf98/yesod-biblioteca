@@ -109,3 +109,14 @@ Pedido
     status StatusPedido
     emprestimoId EmprestimoId Maybe
     UniquePedidoCodigo codigo
+
+Notificacao
+    userId UserId OnDeleteCascade
+    tipo Text
+    chave Text
+    titulo Text
+    texto Text
+    link Text Maybe
+    criadaEm UTCTime
+    lidaEm UTCTime Maybe
+    UniqueNotificacao userId chave

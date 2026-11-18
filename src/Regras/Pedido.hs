@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Regras.Pedido
@@ -6,6 +7,8 @@ module Regras.Pedido
     , pendencias
     , pedirLivro
     , cancelarPedido
+    , cancelarPedidoNoBalcao
+    , atenderFila
     , confirmarRetirada
     , diasRenovacao
     , renovarEmprestimo
@@ -16,10 +19,11 @@ import qualified Data.ByteString as B
 import qualified Data.Text as T
 import Crypto.Random (getRandomBytes)
 import Data.Time (NominalDiffTime, addDays, addUTCTime)
-import Database.Persist.Sql (updateWhereCount)
+import Database.Persist.Sql (fromSqlKey, updateWhereCount)
 import Model
 import Model.Tipos
-import Regras.Emprestimo (formatarCentavos, limiteAbertos, prazoDias)
+import Regras.Emprestimo (formatarCentavos, hoje, limiteAbertos, prazoDias)
+import Regras.Notificacao
 import Regras.Reserva (atenderReserva, filaDeReservas)
 
 prazoRetirada :: NominalDiffTime
@@ -28,9 +32,32 @@ prazoRetirada = 48 * 60 * 60
 expirarPedidos :: MonadIO m => UTCTime -> ReaderT SqlBackend m ()
 expirarPedidos agora = do
     vencidos <- selectList [PedidoStatus ==. PedidoAguardando, PedidoLimiteRetirada <=. agora] []
-    forM_ vencidos $ \(Entity pedidoId p) -> do
-        update pedidoId [PedidoStatus =. PedidoExpirado]
-        update (pedidoExemplarId p) [ExemplarDisponivel =. True]
+    forM_ vencidos $ \pedido@(Entity pedidoId p) -> do
+        livroId <- liberarPedido pedido PedidoExpirado
+        titulo <- tituloDoLivro livroId
+        notificarSocio (pedidoSocioId p) Aviso
+            { avisoTipo = "pedido_expirado"
+            , avisoChave = "pedido_expirado:pedido:" <> chaveDe pedidoId
+            , avisoTitulo = "Pedido expirado: " <> titulo
+            , avisoTexto = "O prazo para retirar o pedido " <> pedidoCodigo p <> " acabou e o exemplar voltou para a estante."
+            , avisoLink = Just (linkDoLivro livroId)
+            }
+        atenderFila livroId agora
+
+liberarPedido :: MonadIO m => Entity Pedido -> StatusPedido -> ReaderT SqlBackend m LivroId
+liberarPedido (Entity pedidoId p) status = do
+    update pedidoId [PedidoStatus =. status]
+    update (pedidoExemplarId p) [ExemplarDisponivel =. True]
+    exemplarLivroId <$> getJust (pedidoExemplarId p)
+
+tituloDoLivro :: MonadIO m => LivroId -> ReaderT SqlBackend m Text
+tituloDoLivro livroId = maybe "livro" livroTitulo <$> get livroId
+
+linkDoLivro :: LivroId -> Text
+linkDoLivro livroId = "/livros/" <> chaveDe livroId
+
+chaveDe :: ToBackendKey SqlBackend r => Key r -> Text
+chaveDe = tshow . fromSqlKey
 
 pendencias :: MonadIO m => SocioId -> Day -> ReaderT SqlBackend m [Text]
 pendencias socioId dia = do
@@ -42,35 +69,83 @@ pendencias socioId dia = do
         , if atrasados > 0 then Just "Há empréstimo atrasado; devolva no balcão para liberar novos pedidos." else Nothing
         ]
 
-pedirLivro :: MonadIO m => SocioId -> LivroId -> UTCTime -> Day -> ReaderT SqlBackend m (Either Text (Entity Pedido))
-pedirLivro socioId livroId agora dia = do
-    expirarPedidos agora
+impedimentos :: MonadIO m => SocioId -> LivroId -> Day -> ReaderT SqlBackend m [Text]
+impedimentos socioId livroId dia = do
     bloqueios <- pendencias socioId dia
     emprestimos <- selectList [EmprestimoSocioId ==. socioId, EmprestimoDataDevolucao ==. Nothing] []
     aguardando <- selectList [PedidoSocioId ==. socioId, PedidoStatus ==. PedidoAguardando] []
     exemplaresDoSocio <- selectList
         [ExemplarId <-. (map (emprestimoExemplarId . entityVal) emprestimos ++ map (pedidoExemplarId . entityVal) aguardando)] []
-    fila <- filaDeReservas livroId
     let emUso = length emprestimos + length aguardando
         jaTem = any ((== livroId) . exemplarLivroId . entityVal) exemplaresDoSocio
-        outroNaFrente = case fila of
+    return $ bloqueios
+        ++ ["Você já está com " <> tshow emUso <> " livros, o máximo. Devolva um para pedir outro." | emUso >= limiteAbertos]
+        ++ ["Você já está com esse livro ou tem um pedido dele aguardando retirada." | jaTem]
+
+exemplaresLivres :: MonadIO m => LivroId -> ReaderT SqlBackend m [ExemplarId]
+exemplaresLivres livroId =
+    selectKeysList [ExemplarLivroId ==. livroId, ExemplarDisponivel ==. True, ExemplarEstado !=. Perdido] [Asc ExemplarEstado, Asc ExemplarCodigo]
+
+pedirLivro :: MonadIO m => SocioId -> LivroId -> UTCTime -> Day -> ReaderT SqlBackend m (Either Text (Entity Pedido))
+pedirLivro socioId livroId agora dia = do
+    expirarPedidos agora
+    motivos <- impedimentos socioId livroId dia
+    fila <- filaDeReservas livroId
+    let outroNaFrente = case fila of
             Entity _ r : _ -> reservaSocioId r /= socioId
             [] -> False
     case () of
-        _ | b : _ <- bloqueios -> return (Left b)
-          | emUso >= limiteAbertos -> return (Left ("Você já está com " <> tshow emUso <> " livros, o máximo. Devolva um para pedir outro."))
-          | jaTem -> return (Left "Você já está com esse livro ou tem um pedido dele aguardando retirada.")
+        _ | m : _ <- motivos -> return (Left m)
           | outroNaFrente -> return (Left "Esse livro tem fila de reservas. Entre na fila para ser avisado.")
           | otherwise -> do
-              livres <- selectKeysList [ExemplarLivroId ==. livroId, ExemplarDisponivel ==. True, ExemplarEstado !=. Perdido] [Asc ExemplarEstado, Asc ExemplarCodigo]
-              separado <- separarPrimeiro livres
+              separado <- exemplaresLivres livroId >>= separarPrimeiro
               case separado of
                   Nothing -> return (Left "Nenhum exemplar disponível agora. Entre na fila para ser avisado.")
-                  Just exemplarId -> do
-                      codigo <- novoCodigo
-                      let pedido = Pedido exemplarId socioId codigo agora (addUTCTime prazoRetirada agora) PedidoAguardando Nothing
-                      pedidoId <- insert pedido
-                      return (Right (Entity pedidoId pedido))
+                  Just exemplarId -> Right <$> registrarPedido socioId exemplarId agora
+
+registrarPedido :: MonadIO m => SocioId -> ExemplarId -> UTCTime -> ReaderT SqlBackend m (Entity Pedido)
+registrarPedido socioId exemplarId agora = do
+    codigo <- novoCodigo
+    let pedido = Pedido exemplarId socioId codigo agora (addUTCTime prazoRetirada agora) PedidoAguardando Nothing
+    pedidoId <- insert pedido
+    exemplar <- getJust exemplarId
+    titulo <- tituloDoLivro (exemplarLivroId exemplar)
+    nome <- maybe "Um sócio" socioNome <$> get socioId
+    notificarBibliotecarios Aviso
+        { avisoTipo = "pedido_novo"
+        , avisoChave = "pedido_novo:pedido:" <> chaveDe pedidoId
+        , avisoTitulo = "Novo pedido: " <> titulo
+        , avisoTexto = nome <> " pediu " <> titulo <> ". Separe o exemplar " <> exemplarCodigo exemplar <> " (pedido " <> codigo <> ")."
+        , avisoLink = Just "/painel/pedidos"
+        }
+    return (Entity pedidoId pedido)
+
+atenderFila :: MonadIO m => LivroId -> UTCTime -> ReaderT SqlBackend m ()
+atenderFila livroId agora = do
+    dia <- hoje
+    filaDeReservas livroId >>= atender dia
+  where
+    atender _ [] = return ()
+    atender dia (Entity reservaId r : resto) = do
+        livres <- exemplaresLivres livroId
+        unless (null livres) $ do
+            motivos <- impedimentos (reservaSocioId r) livroId dia
+            when (null motivos) $ do
+                separado <- separarPrimeiro livres
+                forM_ separado $ \exemplarId -> do
+                    Entity pedidoId p <- registrarPedido (reservaSocioId r) exemplarId agora
+                    update reservaId [ReservaStatus =. Atendida]
+                    titulo <- tituloDoLivro livroId
+                    exemplar <- getJust exemplarId
+                    limite <- dataHoraLocal (pedidoLimiteRetirada p)
+                    notificarSocio (reservaSocioId r) Aviso
+                        { avisoTipo = "fila_disponivel"
+                        , avisoChave = "fila_disponivel:pedido:" <> chaveDe pedidoId
+                        , avisoTitulo = "Chegou a sua vez: " <> titulo
+                        , avisoTexto = "O exemplar " <> exemplarCodigo exemplar <> " está separado para você até " <> limite <> ". Código do pedido: " <> pedidoCodigo p <> "."
+                        , avisoLink = Just "/emprestimos"
+                        }
+            atender dia resto
 
 separarPrimeiro :: MonadIO m => [ExemplarId] -> ReaderT SqlBackend m (Maybe ExemplarId)
 separarPrimeiro [] = return Nothing
@@ -83,10 +158,29 @@ cancelarPedido socioId pedidoId = do
     encontrado <- get pedidoId
     case encontrado of
         Just p | pedidoSocioId p == socioId && pedidoStatus p == PedidoAguardando -> do
-            update pedidoId [PedidoStatus =. PedidoCancelado]
-            update (pedidoExemplarId p) [ExemplarDisponivel =. True]
+            livroId <- liberarPedido (Entity pedidoId p) PedidoCancelado
+            liftIO getCurrentTime >>= atenderFila livroId
             return (Right ())
         _ -> return (Left "Pedido não encontrado ou não pode mais ser cancelado.")
+
+cancelarPedidoNoBalcao :: MonadIO m => PedidoId -> ReaderT SqlBackend m (Either Text ())
+cancelarPedidoNoBalcao pedidoId = do
+    encontrado <- get pedidoId
+    case encontrado of
+        Just p | pedidoStatus p == PedidoAguardando -> do
+            livroId <- liberarPedido (Entity pedidoId p) PedidoCancelado
+            titulo <- tituloDoLivro livroId
+            notificarSocio (pedidoSocioId p) Aviso
+                { avisoTipo = "pedido_cancelado"
+                , avisoChave = "pedido_cancelado:pedido:" <> chaveDe pedidoId
+                , avisoTitulo = "Pedido cancelado: " <> titulo
+                , avisoTexto = "A biblioteca cancelou o pedido " <> pedidoCodigo p <> ". Se ainda quiser o livro, faça um novo pedido."
+                , avisoLink = Just (linkDoLivro livroId)
+                }
+            liftIO getCurrentTime >>= atenderFila livroId
+            return (Right ())
+        Just _ -> return (Left "Só pedidos aguardando retirada podem ser cancelados.")
+        Nothing -> return (Left "Pedido não encontrado.")
 
 confirmarRetirada :: MonadIO m => PedidoId -> UTCTime -> Day -> ReaderT SqlBackend m (Either Text EmprestimoId)
 confirmarRetirada pedidoId agora dia = do

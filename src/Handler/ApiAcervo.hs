@@ -15,6 +15,7 @@ import Api.Validacao
 import qualified Data.Text as T
 import Integracao.OpenLibrary (buscarPorIsbn)
 import Regras.Acervo
+import Regras.Pedido (atenderFila)
 
 lerLivro :: Handler (Livro, [AutorId])
 lerLivro = do
@@ -119,7 +120,11 @@ postApiLivroExemplaresR livroId = do
     (informado, estado) <- lerExemplar
     codigo <- maybe (runDB (gerarCodigoExemplar livroId)) return informado
     codigoRepetido codigo Nothing
-    exemplarId <- runDB $ insert (Exemplar livroId codigo estado True)
+    agora <- liftIO getCurrentTime
+    exemplarId <- runDB $ do
+        exemplarId <- insert (Exemplar livroId codigo estado True)
+        atenderFila livroId agora
+        return exemplarId
     sendStatusJSON status201 $ object ["id" .= exemplarId, "codigo" .= codigo]
 
 putApiExemplarR :: ExemplarId -> Handler Value
