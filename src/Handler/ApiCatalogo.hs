@@ -18,6 +18,7 @@ getApiLivrosR :: Handler Value
 getApiLivrosR = do
     busca <- mfilter (not . null) . fmap T.strip <$> lookupGetParam "busca"
     categoriaFiltro <- (>>= fromPathPiece) <$> lookupGetParam "categoria"
+    situacao <- lookupGetParam "situacao"
     pagina <- max 1 . fromMaybe 1 . (>>= readMay) <$> lookupGetParam "pagina"
     porPagina <- min 100 . max 1 . fromMaybe 24 . (>>= readMay) <$> lookupGetParam "porPagina"
     agora <- liftIO getCurrentTime
@@ -32,8 +33,15 @@ getApiLivrosR = do
                 Nothing -> []
                 Just texto -> [contem LivroTitulo texto] ||. [LivroIsbn ==. Just texto] ||. [LivroId <-. porAutor]
             filtroCategoria = maybe [] (\c -> [LivroCategoriaId ==. c]) categoriaFiltro
-        total <- count (filtroBusca ++ filtroCategoria)
-        livros <- selectList (filtroBusca ++ filtroCategoria)
+        filtroSituacao <- case situacao of
+            Just "disponivel" -> (\ids -> [LivroId <-. ids]) <$> livrosComExemplarLivre
+            Just "indisponivel" -> (\ids -> [LivroId /<-. ids]) <$> livrosComExemplarLivre
+            Just "fila" -> (\ids -> [LivroId <-. ids]) . map (reservaLivroId . entityVal)
+                <$> selectList [ReservaStatus ==. Ativa] []
+            _ -> return []
+        let filtros = filtroBusca ++ filtroCategoria ++ filtroSituacao
+        total <- count filtros
+        livros <- selectList filtros
             [Asc LivroTitulo, Asc LivroId, LimitTo porPagina, OffsetBy ((pagina - 1) * porPagina)]
         categorias <- selectList [] [Asc CategoriaNome]
         let ids = map entityKey livros
@@ -123,6 +131,11 @@ contagensDosLivros ids = do
         [ (k, Contagem (Map.findWithDefault 0 k livresPorLivro) (Map.findWithDefault 0 k filaPorLivro))
         | k <- ids
         ]
+
+livrosComExemplarLivre :: MonadIO m => ReaderT SqlBackend m [LivroId]
+livrosComExemplarLivre =
+    map (exemplarLivroId . entityVal)
+        <$> selectList [ExemplarDisponivel ==. True, ExemplarEstado !=. Perdido] []
 
 contagemDe :: LivroId -> Map LivroId Contagem -> Contagem
 contagemDe = Map.findWithDefault (Contagem 0 0)
