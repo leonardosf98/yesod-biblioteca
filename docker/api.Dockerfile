@@ -5,6 +5,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --create-home --home-dir /app biblioteca
 
+ENV LANG=C.UTF-8
+
 WORKDIR /app
 COPY dist/ /usr/local/bin/
 COPY config/settings.yml config/settings.yml
