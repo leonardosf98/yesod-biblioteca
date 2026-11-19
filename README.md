@@ -124,12 +124,14 @@ erDiagram
     SOCIO ||--o{ RESERVA : ""
     EXEMPLAR ||--o{ PEDIDO : "separa"
     SOCIO ||--o{ PEDIDO : ""
+    EMPRESTIMO |o--o| PEDIDO : "retirada"
     SOCIO |o--o| USER : "conta do app"
     USER ||--o{ SESSAO : ""
+    USER ||--o{ NOTIFICACAO : ""
     SOCIO ||--o| CODIGO_ATIVACAO : ""
 ```
 
-As FKs são `ON DELETE RESTRICT` (o banco impede apagar o que ainda é referenciado), exceto `livro_autor → livro`, que é `CASCADE`.
+As FKs são `ON DELETE RESTRICT` (o banco impede apagar o que ainda é referenciado), exceto `livro_autor → livro`, `sessao → user`, `codigo_ativacao → socio` e `notificacao → user`, que são `CASCADE`.
 
 ## API REST
 
@@ -167,7 +169,7 @@ A API em JSON fica em `/api`. Ela autentica só pelo cabeçalho `Authorization: 
 | PUT / DELETE | `/api/exemplares/:id` | bibliotecário | Edita código e estado; só exclui exemplar sem empréstimos nem pedidos |
 | POST | `/api/ativacao` | público | Corpo `{"email", "codigo", "senha"}`. Cria a conta do sócio (ou troca a senha e encerra as sessões abertas); 400 se o código for inválido, vencido ou já usado, ou se a senha tiver menos de 8 caracteres |
 
-Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e ao pedir, sem tarefa agendada.
+Pedido não retirado em 48 h expira sozinho: a API confere os prazos ao listar e ao pedir, e a `biblioteca-rotina` também expira os vencidos a cada passada.
 
 O banco guarda só o hash SHA-256 do token (tabela `sessao`) e do código de ativação (tabela `codigo_ativacao`), nunca o valor em si. O código é de uso único e fica bloqueado depois de 5 tentativas erradas.
 
