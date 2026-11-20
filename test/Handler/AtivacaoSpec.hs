@@ -1,14 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiAtivacaoSpec (spec) where
+module Handler.AtivacaoSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (Value, object, (.=))
 import Data.Time (addUTCTime)
-import Regras.Ativacao (maximoTentativas, normalizarCodigo)
-import Sessao (hashToken)
+import Regras.Politica (maximoTentativas)
+import Token (hashToken)
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (normalizarCodigo, salvarBibliotecario)
 
 novoSocio :: Text -> YesodExample App SocioId
 novoSocio email = runDB $ insert $ Socio "Ana Souza" email Nothing Nothing Nothing Nothing Nothing Nothing Nothing
@@ -22,12 +22,12 @@ tokenBibliotecario = do
 gerarCodigo :: SocioId -> YesodExample App Text
 gerarCodigo socioId = do
     token <- tokenBibliotecario
-    enviarJson (Just token) (ApiSocioCodigoR socioId) (object [])
+    enviarJson (Just token) (SocioCodigoR socioId) (object [])
     statusIs 201
     campoDaResposta "codigo" >>= maybe (liftIO (expectationFailure "sem código") >> return "") return
 
 ativar :: Text -> Text -> Text -> YesodExample App ()
-ativar email codigo senha = enviarJson Nothing ApiAtivacaoR $
+ativar email codigo senha = enviarJson Nothing AtivacaoR $
     object ["email" .= email, "codigo" .= codigo, "senha" .= senha]
 
 spec :: Spec
@@ -47,7 +47,7 @@ spec = withApp $ describe "Ativação da conta do sócio" $ do
         entrarNaApi "ana@example.com" "minha-senha-1"
         statusIs 201
         token <- tokenDaResposta
-        comToken (Just token) ApiEuR "GET"
+        comToken (Just token) EuR "GET"
         bodyContains "\"papel\":\"socio\""
         usuario <- runDB $ getBy (UniqueUser "ana@example.com")
         assertEq "liga o usuário ao sócio" (Just (Just socioId)) (userSocioId . entityVal <$> usuario)
@@ -98,7 +98,7 @@ spec = withApp $ describe "Ativação da conta do sócio" $ do
         tokenAntigo <- tokenDaResposta
         gerarCodigo socioId >>= \c -> ativar "ana@example.com" c "senha-nova-22"
         statusIs 200
-        comToken (Just tokenAntigo) ApiEuR "GET"
+        comToken (Just tokenAntigo) EuR "GET"
         statusIs 401
 
     it "sócio não gera código" $ do
@@ -106,7 +106,7 @@ spec = withApp $ describe "Ativação da conta do sócio" $ do
         gerarCodigo socioId >>= \c -> ativar "ana@example.com" c "minha-senha-1"
         entrarNaApi "ana@example.com" "minha-senha-1"
         token <- tokenDaResposta
-        enviarJson (Just token) (ApiSocioCodigoR socioId) (object [] :: Value)
+        enviarJson (Just token) (SocioCodigoR socioId) (object [] :: Value)
         statusIs 403
 
     it "não transforma conta de bibliotecário em conta de sócio" $ do

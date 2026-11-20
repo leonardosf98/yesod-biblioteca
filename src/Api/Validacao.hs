@@ -2,21 +2,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Api.Validacao
     ( V
+    , campo
+    , campoTexto
     , texto
     , textoOpcional
-    , campoTexto
-    , campo
+    , exigido
+    , opcional
     , falha
     , exigirValido
-    , conflito
     ) where
 
 import ClassyPrelude.Yesod
-import Data.Aeson.Key (fromText)
 import Control.Monad (mfilter)
+import Data.Aeson.Key (fromText)
 import Data.Aeson.Types (Object, parseMaybe, (.:?))
 import qualified Data.Text as T
 
+-- Diferente de Either, o <*> junta os erros dos dois lados: o formulário
+-- recebe todos os campos inválidos de uma vez, não só o primeiro.
 newtype V a = V (Either [(Text, Text)] a)
 
 instance Functor V where
@@ -29,7 +32,7 @@ instance Applicative V where
     V (Right f) <*> V r = V (fmap f r)
 
 falha :: Text -> Text -> V a
-falha nome mensagemErro = V (Left [(nome, mensagemErro)])
+falha nome mensagem = V (Left [(nome, mensagem)])
 
 campo :: FromJSON a => Object -> Text -> Maybe a
 campo o nome = join (parseMaybe (.:? fromText nome) o)
@@ -47,12 +50,15 @@ texto nome limite valor = case valor of
 textoOpcional :: Text -> Int -> Maybe Text -> V (Maybe Text)
 textoOpcional nome limite = maybe (pure Nothing) (fmap Just . texto nome limite . Just)
 
+exigido :: Text -> Text -> Maybe a -> V a
+exigido nome mensagem = maybe (falha nome mensagem) pure
+
+opcional :: Text -> Text -> (a -> Maybe b) -> Maybe a -> V (Maybe b)
+opcional nome mensagem validar = maybe (pure Nothing) (fmap Just . exigido nome mensagem . validar)
+
 exigirValido :: MonadHandler m => V a -> m a
 exigirValido (V (Right a)) = return a
 exigirValido (V (Left erros)) = sendStatusJSON status400 $ object
     [ "erro" .= ("Confira os campos destacados." :: Text)
     , "campos" .= object [fromText k .= v | (k, v) <- erros]
     ]
-
-conflito :: MonadHandler m => Text -> m a
-conflito mensagemErro = sendStatusJSON status409 $ object ["erro" .= mensagemErro]

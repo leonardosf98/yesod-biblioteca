@@ -186,14 +186,18 @@ Falhas de rede, timeout, ISBN ou CEP inexistente e respostas inesperadas viram m
 
 ```
 config/models.persistentmodels   entidades do banco
-config/routes.yesodroutes        rotas da API
-src/Handler/Api*.hs              handlers JSON por assunto (sessões, catálogo, pedidos, balcão, cadastros…)
-src/Api/Validacao.hs             validação dos corpos JSON com erro por campo
-src/Regras/*.hs                  regras de negócio, testáveis sem HTTP
+config/routes.yesodroutes        rotas da API, agrupadas por área
+src/Foundation.hs                quem pode acessar cada rota e quem é o usuário da requisição
+src/Handler/*.hs                 um arquivo por área: Sessao, Catalogo, Acervo, Cadastros, Socios, Balcao, AreaDoSocio, Notificacoes
+src/Api/*.hs                     validação dos corpos JSON, respostas padrão, filtros e carga de registros relacionados
+src/Regras/*.hs                  regras de negócio, testáveis sem HTTP; números da biblioteca em Regras/Politica.hs
 src/Integracao/*.hs              clientes da Open Library e do ViaCEP
+src/Rotina.hs                    trabalho periódico do serviço rotina
 test/                            testes da API, das regras e das integrações
 web/                             frontend Next.js (área do sócio e painel do bibliotecário)
 ```
+
+O [guia do código](docs/guia-do-codigo.md) explica cada pasta, segue uma requisição do começo ao fim e diz onde mexer para cada tipo de mudança.
 
 ## Integrante
 

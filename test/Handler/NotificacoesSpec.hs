@@ -1,13 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiNotificacaoSpec (spec) where
+module Handler.NotificacoesSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (object, (.=))
 import Data.Time (addDays, addUTCTime)
-import Regras.Emprestimo (hoje)
+import Regras.Comum (hoje)
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 import Yesod.Auth.HashDB (setPassword)
 
 novoSocio :: Text -> YesodExample App (SocioId, Text)
@@ -48,38 +48,38 @@ spec = withApp $ describe "Notificações" $ do
         (livroId, _) <- livroComExemplar
         tb <- tokenBibliotecario
         (_, ts) <- novoSocio "ana@example.com"
-        enviarJson (Just ts) (ApiLivroPedidosR livroId) (object [])
+        enviarJson (Just ts) (LivroPedidosR livroId) (object [])
         statusIs 201
-        comToken (Just tb) ApiNotificacoesR "GET"
+        comToken (Just tb) NotificacoesR "GET"
         statusIs 200
         bodyContains "\"naoLidas\":1"
         bodyContains "\"tipo\":\"pedido_novo\""
         bodyContains "Novo pedido: Dom Casmurro"
-        comToken (Just ts) ApiNotificacoesR "GET"
+        comToken (Just ts) NotificacoesR "GET"
         bodyContains "\"naoLidas\":0"
         Entity notificacaoId _ <- runDB (selectFirst [] []) >>= maybe (error "sem notificação") return
-        enviarJson (Just ts) (ApiNotificacaoLeituraR notificacaoId) (object [])
+        enviarJson (Just ts) (NotificacaoLeituraR notificacaoId) (object [])
         statusIs 404
-        enviarJson (Just tb) (ApiNotificacaoLeituraR notificacaoId) (object [])
+        enviarJson (Just tb) (NotificacaoLeituraR notificacaoId) (object [])
         statusIs 204
-        comToken (Just tb) ApiNotificacoesR "GET"
+        comToken (Just tb) NotificacoesR "GET"
         bodyContains "\"naoLidas\":0"
 
     it "marcar todas como lidas só mexe nas do próprio usuário" $ do
         (livroId, _) <- livroComExemplar
         tb <- tokenBibliotecario
         (_, ts) <- novoSocio "ana@example.com"
-        enviarJson (Just ts) (ApiLivroPedidosR livroId) (object [])
-        enviarJson (Just ts) ApiNotificacoesLeituraR (object [])
+        enviarJson (Just ts) (LivroPedidosR livroId) (object [])
+        enviarJson (Just ts) NotificacoesLeituraR (object [])
         statusIs 204
-        comToken (Just tb) ApiNotificacoesR "GET"
+        comToken (Just tb) NotificacoesR "GET"
         bodyContains "\"naoLidas\":1"
-        enviarJson (Just tb) ApiNotificacoesLeituraR (object [])
-        comToken (Just tb) ApiNotificacoesR "GET"
+        enviarJson (Just tb) NotificacoesLeituraR (object [])
+        comToken (Just tb) NotificacoesR "GET"
         bodyContains "\"naoLidas\":0"
 
     it "exige login" $ do
-        comToken Nothing ApiNotificacoesR "GET"
+        comToken Nothing NotificacoesR "GET"
         statusIs 401
 
     it "devolução separa o exemplar para o primeiro da fila e avisa" $ do
@@ -92,7 +92,7 @@ spec = withApp $ describe "Notificações" $ do
             update exemplarId [ExemplarDisponivel =. False]
             insert_ $ Reserva livroId naFila dia Ativa
             insert $ Emprestimo exemplarId leitor (addDays (-3) dia) (addDays 11 dia) Nothing 0 0 Nothing
-        enviarJson (Just tb) (ApiDevolucaoR emprestimoId) (object [])
+        enviarJson (Just tb) (DevolucaoR emprestimoId) (object [])
         statusIs 200
         pedidos <- runDB $ selectList [PedidoSocioId ==. naFila, PedidoStatus ==. PedidoAguardando] []
         assertEq "pedido separado para quem estava na fila" 1 (length pedidos)
@@ -117,7 +117,7 @@ spec = withApp $ describe "Notificações" $ do
             update exemplarId [ExemplarDisponivel =. False]
             insert_ $ Reserva livroId bloqueado dia Ativa
             insert_ $ Reserva livroId liberado dia Ativa
-        enviarJson (Just tb) (ApiLivroExemplaresR livroId) (object ["estado" .= ("bom" :: Text)])
+        enviarJson (Just tb) (LivroExemplaresR livroId) (object ["estado" .= ("bom" :: Text)])
         statusIs 201
         pedidos <- runDB $ map (pedidoSocioId . entityVal) <$> selectList [PedidoStatus ==. PedidoAguardando] []
         assertEq "o exemplar novo vai para o segundo da fila" [liberado] pedidos
@@ -126,11 +126,11 @@ spec = withApp $ describe "Notificações" $ do
         (livroId, exemplarId) <- livroComExemplar
         tb <- tokenBibliotecario
         (socioId, ts) <- novoSocio "ana@example.com"
-        enviarJson (Just ts) (ApiLivroPedidosR livroId) (object [])
+        enviarJson (Just ts) (LivroPedidosR livroId) (object [])
         pedidoId <- idDaResposta
-        comToken (Just ts) (ApiPedidoR pedidoId) "DELETE"
+        comToken (Just ts) (PedidoR pedidoId) "DELETE"
         statusIs 403
-        comToken (Just tb) (ApiPedidoR pedidoId) "DELETE"
+        comToken (Just tb) (PedidoR pedidoId) "DELETE"
         statusIs 204
         status <- runDB $ pedidoStatus <$> getJust pedidoId
         assertEq "pedido cancelado" PedidoCancelado status
@@ -138,21 +138,21 @@ spec = withApp $ describe "Notificações" $ do
         assertEq "exemplar volta para a estante" True disponivel
         tipos <- tiposDe socioId
         assertEq "aviso de cancelamento" ["pedido_cancelado"] tipos
-        comToken (Just tb) (ApiPedidoR pedidoId) "DELETE"
+        comToken (Just tb) (PedidoR pedidoId) "DELETE"
         statusIs 409
 
     it "pedido vencido avisa o sócio e passa o exemplar para a fila" $ do
         (livroId, _) <- livroComExemplar
         (primeiro, t1) <- novoSocio "ana@example.com"
         (segundo, _) <- novoSocio "bia@example.com"
-        enviarJson (Just t1) (ApiLivroPedidosR livroId) (object [])
+        enviarJson (Just t1) (LivroPedidosR livroId) (object [])
         pedidoId <- idDaResposta
         dia <- hoje
         agora <- liftIO getCurrentTime
         runDB $ do
             insert_ $ Reserva livroId segundo dia Ativa
             update pedidoId [PedidoLimiteRetirada =. addUTCTime (-1) agora]
-        comToken Nothing (ApiLivroR livroId) "GET"
+        comToken Nothing (LivroR livroId) "GET"
         tipos <- tiposDe primeiro
         assertEq "aviso de expiração" ["pedido_expirado"] tipos
         doSegundo <- runDB $ count [PedidoSocioId ==. segundo, PedidoStatus ==. PedidoAguardando]

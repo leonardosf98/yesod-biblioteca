@@ -7,7 +7,7 @@ import Data.Time (addDays)
 import Database.Persist.Sql (fromSqlKey)
 import Model
 import Model.Tipos
-import Regras.Emprestimo (hoje)
+import Regras.Comum (hoje)
 
 popular :: MonadIO m => ReaderT SqlBackend m ()
 popular = do

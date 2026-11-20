@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiCatalogoSpec (spec) where
+module Handler.CatalogoSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (Value, withObject, (.:))
@@ -38,7 +38,7 @@ listar :: [(Text, Text)] -> YesodExample App [(Text, Int, Int, [Text])]
 listar parametros = do
     request $ do
         setMethod "GET"
-        setUrl ApiLivrosR
+        setUrl LivrosR
         addRequestHeader ("Accept", "application/json")
         forM_ parametros (uncurry addGetParam)
     statusIs 200
@@ -94,7 +94,7 @@ spec = withApp $ describe "API do catálogo" $ do
         acervo <- montarAcervo
         request $ do
             setMethod "GET"
-            setUrl (ApiLivroR (domCasmurro acervo))
+            setUrl (LivroR (domCasmurro acervo))
             addRequestHeader ("Accept", "application/json")
         statusIs 200
         bodyContains "\"sinopse\":\"Bentinho e Capitu.\""
@@ -108,7 +108,7 @@ spec = withApp $ describe "API do catálogo" $ do
         runDB $ deleteWhere [ExemplarLivroId ==. vidasSecas acervo] >> deleteWhere [ReservaLivroId ==. vidasSecas acervo] >> delete (vidasSecas acervo)
         request $ do
             setMethod "GET"
-            setUrl (ApiLivroR (vidasSecas acervo))
+            setUrl (LivroR (vidasSecas acervo))
             addRequestHeader ("Accept", "application/json")
         statusIs 404
         bodyContains "\"erro\""

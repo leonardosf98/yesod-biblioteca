@@ -1,15 +1,17 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiSessao
-    ( postApiSessoesR
-    , deleteApiSessoesR
-    , getApiEuR
+module Handler.Sessao
+    ( postSessoesR
+    , deleteSessoesR
+    , getEuR
     ) where
 
 import Import
+import Api.Resposta
 import Data.Aeson (withObject)
 import Data.Time (addUTCTime)
-import Sessao (hashToken, novoToken, validadeSessao)
+import Regras.Politica (validadeSessao)
+import Token (hashToken, novoToken)
 import Yesod.Auth.HashDB (validatePass)
 
 data Credenciais = Credenciais Text Text
@@ -18,8 +20,8 @@ instance FromJSON Credenciais where
     parseJSON = withObject "Credenciais" $ \o ->
         Credenciais <$> o .: "login" <*> o .: "senha"
 
-postApiSessoesR :: Handler Value
-postApiSessoesR = do
+postSessoesR :: Handler Value
+postSessoesR = do
     Credenciais login senha <- requireCheckJsonBody
     usuario <- runDB $ getBy (UniqueUser login)
     case usuario of
@@ -30,24 +32,24 @@ postApiSessoesR = do
             runDB $ do
                 deleteWhere [SessaoUserId ==. usuarioId, SessaoExpiraEm <=. agora]
                 insert_ $ Sessao usuarioId (hashToken token) expiraEm
-            sendStatusJSON status201 $ object
+            criado $ object
                 [ "token" .= token
                 , "expiraEm" .= expiraEm
                 , "usuario" .= usuarioJson u
                 ]
-        _ -> sendStatusJSON status401 $ object ["erro" .= ("Login ou senha inválidos." :: Text)]
+        _ -> recusar status401 "Login ou senha inválidos."
 
-deleteApiSessoesR :: Handler Value
-deleteApiSessoesR = do
+deleteSessoesR :: Handler Value
+deleteSessoesR = do
     token <- lookupBearerAuth
     case token of
-        Nothing -> sendStatusJSON status401 $ object ["erro" .= ("Sessão não informada." :: Text)]
+        Nothing -> recusar status401 "Sessão não informada."
         Just valor -> do
             runDB $ deleteBy (UniqueSessaoToken (hashToken valor))
-            sendResponseStatus status204 ()
+            semConteudo
 
-getApiEuR :: Handler Value
-getApiEuR = do
+getEuR :: Handler Value
+getEuR = do
     Entity _ u <- exigirUsuario
     returnJson (usuarioJson u)
 
