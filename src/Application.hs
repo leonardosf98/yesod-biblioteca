@@ -22,7 +22,7 @@ module Application
 
 import Control.Monad.Logger                 (liftLoc, runLoggingT)
 import Database.Persist.Postgresql          (createPostgresqlPool, pgConnStr,
-                                             pgPoolSize, runSqlPool)
+                                             pgPoolSize, runSqlPool, rawSql, Single)
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.HTTP.Client.TLS              (getGlobalManager)
@@ -84,10 +84,18 @@ makeFoundation appSettings = do
         (pgPoolSize $ appDatabaseConf appSettings)
 
     -- Perform database migration using our application's logging settings.
-    runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
+    runLoggingT (runSqlPool migrarComTrava pool) logFunc
 
     -- Return the foundation
     return $ mkFoundation pool
+
+-- api, rotina, seed e usuario migram ao subir; sem a trava, dois processos num
+-- banco vazio criam as mesmas tabelas ao mesmo tempo e o segundo falha.
+migrarComTrava :: MonadIO m => ReaderT SqlBackend m ()
+migrarComTrava = do
+    travado <- rawSql "SELECT 1 FROM (SELECT pg_advisory_xact_lock(?)) AS trava" [PersistInt64 7341920558]
+    let _ = travado :: [Single Int]
+    runMigration migrateAll
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applying some additional middlewares.
