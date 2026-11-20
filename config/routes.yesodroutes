@@ -1,39 +1,44 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
-
 / HomeR GET
 
-/api/sessoes ApiSessoesR POST DELETE
-/api/eu ApiEuR GET
-/api/ativacao ApiAtivacaoR POST
-/api/socios/#SocioId/codigo-ativacao ApiSocioCodigoR POST
-/api/livros ApiLivrosR GET POST
-/api/livros/#LivroId ApiLivroR GET PUT DELETE
-/api/livros/#LivroId/pedidos ApiLivroPedidosR POST
-/api/eu/pedidos/#PedidoId ApiEuPedidoR DELETE
-/api/eu/emprestimos ApiEuEmprestimosR GET
-/api/pedidos/#PedidoId/retirada ApiPedidoRetiradaR POST
-/api/pedidos/#PedidoId ApiPedidoR DELETE
-/api/eu/emprestimos/#EmprestimoId/renovacao ApiEuRenovacaoR POST
-/api/livros/#LivroId/reservas ApiLivroReservasR POST
-/api/emprestimos/#EmprestimoId/pagamento-multa ApiPagamentoMultaR POST
-/api/painel ApiPainelR GET
-/api/balcao/exemplares/#Text ApiExemplarCodigoR GET
-/api/emprestimos ApiEmprestimosR POST
-/api/emprestimos/#EmprestimoId/devolucao ApiDevolucaoR POST
-/api/socios ApiSociosR GET POST
-/api/socios/#SocioId ApiSocioR GET PUT DELETE
-/api/autores ApiAutoresR GET POST
-/api/autores/#AutorId ApiAutorR PUT DELETE
-/api/editoras ApiEditorasR GET POST
-/api/editoras/#EditoraId ApiEditoraR PUT DELETE
-/api/categorias ApiCategoriasR GET POST
-/api/categorias/#CategoriaId ApiCategoriaR PUT DELETE
-!/api/livros/importacao ApiLivroImportacaoR POST
-/api/livros/#LivroId/exemplares ApiLivroExemplaresR POST
-/api/exemplares/#ExemplarId ApiExemplarR PUT DELETE
-/api/eu/reservas/#ReservaId ApiEuReservaR DELETE
-/api/reservas/#ReservaId ApiReservaR DELETE
-/api/notificacoes ApiNotificacoesR GET
-/api/notificacoes/leitura ApiNotificacoesLeituraR POST
-/api/notificacoes/#NotificacaoId/leitura ApiNotificacaoLeituraR POST
+/api/sessoes SessoesR POST DELETE
+/api/eu EuR GET
+/api/ativacao AtivacaoR POST
+/api/socios/#SocioId/codigo-ativacao SocioCodigoR POST
+
+/api/livros LivrosR GET POST
+/api/livros/#LivroId LivroR GET PUT DELETE
+!/api/livros/importacao LivroImportacaoR POST
+/api/livros/#LivroId/exemplares LivroExemplaresR POST
+/api/exemplares/#ExemplarId ExemplarR PUT DELETE
+
+/api/autores AutoresR GET POST
+/api/autores/#AutorId AutorR PUT DELETE
+/api/editoras EditorasR GET POST
+/api/editoras/#EditoraId EditoraR PUT DELETE
+/api/categorias CategoriasR GET POST
+/api/categorias/#CategoriaId CategoriaR PUT DELETE
+
+/api/socios SociosR GET POST
+/api/socios/#SocioId SocioR GET PUT DELETE
+
+/api/painel PainelR GET
+/api/balcao/exemplares/#Text ExemplarCodigoR GET
+/api/emprestimos EmprestimosR POST
+/api/emprestimos/#EmprestimoId/devolucao DevolucaoR POST
+/api/emprestimos/#EmprestimoId/pagamento-multa PagamentoMultaR POST
+/api/pedidos/#PedidoId PedidoR DELETE
+/api/pedidos/#PedidoId/retirada PedidoRetiradaR POST
+/api/reservas/#ReservaId ReservaR DELETE
+
+/api/eu/emprestimos EuEmprestimosR GET
+/api/eu/emprestimos/#EmprestimoId/renovacao EuRenovacaoR POST
+/api/livros/#LivroId/pedidos LivroPedidosR POST
+/api/eu/pedidos/#PedidoId EuPedidoR DELETE
+/api/livros/#LivroId/reservas LivroReservasR POST
+/api/eu/reservas/#ReservaId EuReservaR DELETE
+
+/api/notificacoes NotificacoesR GET
+/api/notificacoes/leitura NotificacoesLeituraR POST
+/api/notificacoes/#NotificacaoId/leitura NotificacaoLeituraR POST

@@ -73,19 +73,12 @@ getTables = do
     return $ map unSingle tables
 
 criarUsuario :: Papel -> Text -> YesodExample App (Entity User)
-criarUsuario papel ident = runDB $ do
-    user <- insertEntity User
+criarUsuario papel ident = runDB $ insertEntity User
         { userIdent = ident
         , userPassword = Nothing
         , userPapel = papel
         , userSocioId = Nothing
         }
-    _ <- insert Email
-        { emailEmail = ident
-        , emailUserId = Just $ entityKey user
-        , emailVerkey = Nothing
-        }
-    return user
 
 createUser :: Text -> YesodExample App (Entity User)
 createUser = criarUsuario PapelBibliotecario

@@ -1,13 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiBalcaoSpec (spec) where
+module Handler.BalcaoSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (object, (.=))
 import Data.Time (addDays, addUTCTime)
-import Regras.Emprestimo (hoje)
+import Regras.Comum (hoje)
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 
 data Balcao = Balcao
     { ana :: SocioId
@@ -45,7 +45,7 @@ spec :: Spec
 spec = withApp $ describe "API do balcão" $ do
     it "painel traz números, pedidos, atrasados e devoluções de hoje" $ do
         c <- montar
-        comToken (Just (token c)) ApiPainelR "GET"
+        comToken (Just (token c)) PainelR "GET"
         statusIs 200
         bodyContains "\"abertos\":2"
         bodyContains "\"atrasados\":1"
@@ -57,45 +57,45 @@ spec = withApp $ describe "API do balcão" $ do
 
     it "sócio e visitante não veem o painel" $ do
         _ <- montar
-        comToken Nothing ApiPainelR "GET"
+        comToken Nothing PainelR "GET"
         statusIs 401
 
     it "acha o exemplar pelo código, com o empréstimo em aberto" $ do
         c <- montar
-        comToken (Just (token c)) (ApiExemplarCodigoR "vs-1") "GET"
+        comToken (Just (token c)) (ExemplarCodigoR "vs-1") "GET"
         statusIs 200
         bodyContains "\"titulo\":\"Vidas Secas\""
         bodyContains "\"nome\":\"Ana Souza\""
         bodyContains "\"multaCentavos\":300"
-        comToken (Just (token c)) (ApiExemplarCodigoR "XX-9") "GET"
+        comToken (Just (token c)) (ExemplarCodigoR "XX-9") "GET"
         statusIs 404
 
     it "empresta no balcão, mas não para quem tem pendência" $ do
         c <- montar
-        enviarJson (Just (token c)) ApiEmprestimosR (object ["socioId" .= ana c, "exemplarId" .= livre c])
+        enviarJson (Just (token c)) EmprestimosR (object ["socioId" .= ana c, "exemplarId" .= livre c])
         statusIs 409
         bodyContains "atrasado"
-        enviarJson (Just (token c)) ApiEmprestimosR (object ["socioId" .= bruno c, "exemplarId" .= emprestado c])
+        enviarJson (Just (token c)) EmprestimosR (object ["socioId" .= bruno c, "exemplarId" .= emprestado c])
         statusIs 409
-        enviarJson (Just (token c)) ApiEmprestimosR (object ["socioId" .= bruno c, "exemplarId" .= livre c])
+        enviarJson (Just (token c)) EmprestimosR (object ["socioId" .= bruno c, "exemplarId" .= livre c])
         statusIs 201
         bodyContains "\"dataPrevista\""
 
     it "registra a devolução com multa uma vez só" $ do
         c <- montar
-        enviarJson (Just (token c)) (ApiDevolucaoR (atrasado c)) (object [])
+        enviarJson (Just (token c)) (DevolucaoR (atrasado c)) (object [])
         statusIs 200
         bodyContains "\"multaCentavos\":300"
         disponivel <- runDB $ exemplarDisponivel <$> getJust (emprestado c)
         assertEq "volta para a estante" True disponivel
-        enviarJson (Just (token c)) (ApiDevolucaoR (atrasado c)) (object [])
+        enviarJson (Just (token c)) (DevolucaoR (atrasado c)) (object [])
         statusIs 409
 
     it "busca sócios por nome ou e-mail com a situação de cada um" $ do
         c <- montar
         request $ do
             setMethod "GET"
-            setUrl ApiSociosR
+            setUrl SociosR
             addGetParam "busca" "brun"
             addRequestHeader ("Accept", "application/json")
             addRequestHeader ("Authorization", "Bearer " <> encodeUtf8 (token c))

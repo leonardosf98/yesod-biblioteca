@@ -1,23 +1,19 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiWayIf #-}
 module Rotina
     ( rodarRotina
     , rodarRotinaEm
-    , antecedenciaExpiracao
     ) where
 
 import ClassyPrelude.Yesod
-import Data.Time (NominalDiffTime, addDays, addUTCTime)
-import Database.Persist.Sql (fromSqlKey)
+import Data.Time (addDays, addUTCTime)
 import Model
 import Model.Tipos
-import Regras.Emprestimo (calcularMulta, formatarCentavos, hoje)
+import Regras.Comum (dataHoraLocal, hoje, tituloDoExemplar)
+import Regras.Emprestimo (calcularMulta)
 import Regras.Notificacao
 import Regras.Pedido (atenderFila, expirarPedidos)
-
-antecedenciaExpiracao :: NominalDiffTime
-antecedenciaExpiracao = 6 * 60 * 60
+import Regras.Politica (antecedenciaExpiracao)
 
 rodarRotina :: MonadIO m => ReaderT SqlBackend m Int
 rodarRotina = do
@@ -43,49 +39,18 @@ avisarPedidosExpirando agora = do
         , PedidoLimiteRetirada >. agora
         , PedidoLimiteRetirada <=. addUTCTime antecedenciaExpiracao agora
         ] []
-    forM_ pedidos $ \(Entity pedidoId p) -> do
+    forM_ pedidos $ \pedido@(Entity _ p) -> do
         titulo <- tituloDoExemplar (pedidoExemplarId p)
         limite <- dataHoraLocal (pedidoLimiteRetirada p)
-        notificarSocio (pedidoSocioId p) Aviso
-            { avisoTipo = "pedido_expirando"
-            , avisoChave = "pedido_expirando:pedido:" <> chaveDe pedidoId
-            , avisoTitulo = "Retire até " <> limite <> ": " <> titulo
-            , avisoTexto = "O pedido " <> pedidoCodigo p <> " expira em menos de 6 horas. Depois disso o exemplar volta para a estante."
-            , avisoLink = Just "/emprestimos"
-            }
+        notificarSocio (pedidoSocioId p) (avisoPedidoExpirando pedido titulo limite)
 
 avisarDevolucoes :: MonadIO m => Day -> ReaderT SqlBackend m ()
 avisarDevolucoes dia = do
     abertos <- selectList [EmprestimoDataDevolucao ==. Nothing, EmprestimoDataPrevista <=. addDays 1 dia] []
-    forM_ abertos $ \(Entity emprestimoId e) -> do
+    forM_ abertos $ \emprestimo@(Entity _ e) -> do
         titulo <- tituloDoExemplar (emprestimoExemplarId e)
         let prevista = emprestimoDataPrevista e
-            referencia = "emprestimo:" <> chaveDe emprestimoId
-        if prevista < dia
-            then notificarSocio (emprestimoSocioId e) Aviso
-                { avisoTipo = "emprestimo_atrasado"
-                , avisoChave = "emprestimo_atrasado:" <> referencia <> ":" <> tshow dia
-                , avisoTitulo = "Devolução atrasada: " <> titulo
-                , avisoTexto = "O prazo venceu em " <> dataCurta prevista <> ". Multa prevista até hoje: "
-                    <> formatarCentavos (calcularMulta prevista dia) <> ". Devolva no balcão."
-                , avisoLink = Just "/emprestimos"
-                }
-            else when (prevista == addDays 1 dia) $ notificarSocio (emprestimoSocioId e) Aviso
-                { avisoTipo = "devolucao_vencendo"
-                , avisoChave = "devolucao_vencendo:" <> referencia <> ":" <> tshow prevista
-                , avisoTitulo = "Devolva amanhã: " <> titulo
-                , avisoTexto = "O prazo de devolução vence amanhã, " <> dataCurta prevista <> ". Se não houver fila, dá para renovar uma vez."
-                , avisoLink = Just "/emprestimos"
-                }
-
-tituloDoExemplar :: MonadIO m => ExemplarId -> ReaderT SqlBackend m Text
-tituloDoExemplar exemplarId = do
-    exemplar <- get exemplarId
-    livro <- maybe (return Nothing) (get . exemplarLivroId) exemplar
-    return (maybe "livro" livroTitulo livro)
-
-dataCurta :: Day -> Text
-dataCurta = pack . formatTime defaultTimeLocale "%d/%m"
-
-chaveDe :: ToBackendKey SqlBackend r => Key r -> Text
-chaveDe = tshow . fromSqlKey
+            avisar = notificarSocio (emprestimoSocioId e)
+        if  | prevista < dia -> avisar (avisoEmprestimoAtrasado emprestimo dia titulo (calcularMulta prevista dia))
+            | prevista == addDays 1 dia -> avisar (avisoDevolucaoAmanha emprestimo titulo)
+            | otherwise -> return ()

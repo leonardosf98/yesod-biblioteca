@@ -1,13 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiPedidoSpec (spec) where
+module Handler.PedidosSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (object)
 import Data.Time (addDays, addUTCTime)
-import Regras.Emprestimo (hoje)
+import Regras.Comum (hoje)
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 import Yesod.Auth.HashDB (setPassword)
 
 data Cenario = Cenario
@@ -42,7 +42,7 @@ cenario = do
     return (Cenario livroId outroId exemplarId socioId t)
 
 pedir :: Text -> LivroId -> YesodExample App ()
-pedir t livroId = enviarJson (Just t) (ApiLivroPedidosR livroId) (object [])
+pedir t livroId = enviarJson (Just t) (LivroPedidosR livroId) (object [])
 
 pedidoUnico :: YesodExample App (Entity Pedido)
 pedidoUnico = runDB (selectFirst [] [Desc PedidoId]) >>= maybe (error "sem pedido") return
@@ -62,7 +62,7 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         bodyContains "\"codigo\""
         disponivel <- runDB $ exemplarDisponivel <$> getJust (exemplar c)
         assertEq "exemplar separado" False disponivel
-        comToken Nothing (ApiLivroR (livro c)) "GET"
+        comToken Nothing (LivroR (livro c)) "GET"
         bodyContains "\"disponiveis\":0"
 
     it "só sócio pede" $ do
@@ -130,9 +130,9 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         Entity pedidoId _ <- pedidoUnico
         agora <- liftIO getCurrentTime
         runDB $ update pedidoId [PedidoLimiteRetirada =. addUTCTime (-1) agora]
-        comToken Nothing (ApiLivroR (livro c)) "GET"
+        comToken Nothing (LivroR (livro c)) "GET"
         bodyContains "\"disponiveis\":1"
-        comToken (Just (token c)) ApiEuEmprestimosR "GET"
+        comToken (Just (token c)) EuEmprestimosR "GET"
         statusIs 200
         bodyContains "\"pedidos\":[]"
         status <- runDB $ pedidoStatus <$> getJust pedidoId
@@ -140,7 +140,7 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         disponivel <- runDB $ exemplarDisponivel <$> getJust (exemplar c)
         assertEq "de volta" True disponivel
         t <- tokenBibliotecario
-        enviarJson (Just t) (ApiPedidoRetiradaR pedidoId) (object [])
+        enviarJson (Just t) (PedidoRetiradaR pedidoId) (object [])
         statusIs 409
 
     it "sócio cancela o próprio pedido, mas não o de outro" $ do
@@ -148,9 +148,9 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         pedir (token c) (livro c)
         Entity pedidoId _ <- pedidoUnico
         (_, t2) <- novoSocio "bia@example.com"
-        comToken (Just t2) (ApiEuPedidoR pedidoId) "DELETE"
+        comToken (Just t2) (EuPedidoR pedidoId) "DELETE"
         statusIs 404
-        comToken (Just (token c)) (ApiEuPedidoR pedidoId) "DELETE"
+        comToken (Just (token c)) (EuPedidoR pedidoId) "DELETE"
         statusIs 204
         disponivel <- runDB $ exemplarDisponivel <$> getJust (exemplar c)
         assertEq "liberado" True disponivel
@@ -160,14 +160,14 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         pedir (token c) (livro c)
         Entity pedidoId _ <- pedidoUnico
         t <- tokenBibliotecario
-        enviarJson (Just t) (ApiPedidoRetiradaR pedidoId) (object [])
+        enviarJson (Just t) (PedidoRetiradaR pedidoId) (object [])
         statusIs 201
         dia <- hoje
         emprestimos <- runDB $ selectList [EmprestimoSocioId ==. socio c] []
         assertEq "prazo" [addDays 14 dia] (map (emprestimoDataPrevista . entityVal) emprestimos)
-        enviarJson (Just t) (ApiPedidoRetiradaR pedidoId) (object [])
+        enviarJson (Just t) (PedidoRetiradaR pedidoId) (object [])
         statusIs 409
-        enviarJson (Just (token c)) (ApiPedidoRetiradaR pedidoId) (object [])
+        enviarJson (Just (token c)) (PedidoRetiradaR pedidoId) (object [])
         statusIs 403
 
     it "meus empréstimos mostra empréstimos, pedidos, reservas e o que está em uso" $ do
@@ -175,7 +175,7 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
         dia <- hoje
         pedir (token c) (livro c)
         runDB $ insert_ $ Reserva (outroLivro c) (socio c) dia Ativa
-        comToken (Just (token c)) ApiEuEmprestimosR "GET"
+        comToken (Just (token c)) EuEmprestimosR "GET"
         statusIs 200
         bodyContains "\"titulo\":\"Dom Casmurro\""
         bodyContains "\"posicao\":1"
@@ -188,7 +188,7 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
                 runDB $ do
                     update (exemplar c) [ExemplarDisponivel =. False]
                     insert $ Emprestimo (exemplar c) (socio c) (addDays (-3) dia) (addDays dias dia) Nothing 0 0 Nothing
-            renovar t e = enviarJson (Just t) (ApiEuRenovacaoR e) (object [])
+            renovar t e = enviarJson (Just t) (EuRenovacaoR e) (object [])
 
         it "renova uma vez por mais 7 dias" $ do
             c <- cenario
@@ -221,10 +221,10 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
 
         it "sócio entra na fila pelo app só quando não há exemplar livre" $ do
             c <- cenario
-            enviarJson (Just (token c)) (ApiLivroReservasR (livro c)) (object [])
+            enviarJson (Just (token c)) (LivroReservasR (livro c)) (object [])
             statusIs 409
             runDB $ update (exemplar c) [ExemplarDisponivel =. False]
-            enviarJson (Just (token c)) (ApiLivroReservasR (livro c)) (object [])
+            enviarJson (Just (token c)) (LivroReservasR (livro c)) (object [])
             statusIs 201
             bodyContains "\"posicao\":1"
 
@@ -236,12 +236,12 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
                 l <- insert $ Livro "Antigo" Nothing Nothing Nothing Nothing Nothing categoria
                 ex <- insert $ Exemplar l "AN-1" Bom True
                 insert $ Emprestimo ex (socio c) (addDays (-30) dia) (addDays (-16) dia) (Just (addDays (-14) dia)) 200 0 Nothing
-            enviarJson (Just (token c)) (ApiPagamentoMultaR e) (object [])
+            enviarJson (Just (token c)) (PagamentoMultaR e) (object [])
             statusIs 403
             t <- tokenBibliotecario
-            enviarJson (Just t) (ApiPagamentoMultaR e) (object [])
+            enviarJson (Just t) (PagamentoMultaR e) (object [])
             statusIs 204
-            enviarJson (Just t) (ApiPagamentoMultaR e) (object [])
+            enviarJson (Just t) (PagamentoMultaR e) (object [])
             statusIs 409
             pedir (token c) (livro c)
             statusIs 201
@@ -251,16 +251,16 @@ spec = withApp $ describe "Pedido de empréstimo pelo sócio" $ do
             (outro, t2) <- novoSocio "bia@example.com"
             dia <- hoje
             (minha, dela) <- runDB $ (,) <$> insert (Reserva (livro c) (socio c) dia Ativa) <*> insert (Reserva (livro c) outro dia Ativa)
-            comToken (Just t2) (ApiEuReservaR minha) "DELETE"
+            comToken (Just t2) (EuReservaR minha) "DELETE"
             statusIs 404
-            comToken (Just (token c)) (ApiEuReservaR minha) "DELETE"
+            comToken (Just (token c)) (EuReservaR minha) "DELETE"
             statusIs 204
-            comToken (Just (token c)) (ApiEuReservaR minha) "DELETE"
+            comToken (Just (token c)) (EuReservaR minha) "DELETE"
             statusIs 409
-            comToken (Just (token c)) (ApiReservaR dela) "DELETE"
+            comToken (Just (token c)) (ReservaR dela) "DELETE"
             statusIs 403
             t <- tokenBibliotecario
-            comToken (Just t) (ApiReservaR dela) "DELETE"
+            comToken (Just t) (ReservaR dela) "DELETE"
             statusIs 204
             status <- runDB $ map (reservaStatus . entityVal) <$> selectList [ReservaLivroId ==. livro c] [Asc ReservaId]
             assertEq "ambas canceladas" [Cancelada, Cancelada] status

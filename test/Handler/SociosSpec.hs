@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiSocioSpec (spec) where
+module Handler.SociosSpec (spec) where
 
 import ApiTeste
 import Data.Aeson (Value, encode, object, (.=))
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 import Yesod.Auth.HashDB (setPassword)
 
 bibliotecario :: YesodExample App Text
@@ -27,20 +27,20 @@ spec :: Spec
 spec = withApp $ describe "API de sócios" $ do
     it "cadastra com e-mail em minúsculas e telefone só com dígitos" $ do
         t <- bibliotecario
-        enviarJson (Just t) ApiSociosR $ object
+        enviarJson (Just t) SociosR $ object
             ["nome" .= ("Ana Souza" :: Text), "email" .= ("Ana@Example.com" :: Text), "telefone" .= ("(11) 98888-7777" :: Text)]
         statusIs 201
         socioId <- idDaResposta
         socio <- runDB $ getJust socioId
         assertEq "email" "ana@example.com" (socioEmail socio)
         assertEq "telefone" (Just "11988887777") (socioTelefone socio)
-        comToken (Just t) (ApiSocioR socioId) "GET"
+        comToken (Just t) (SocioR socioId) "GET"
         statusIs 200
         bodyContains "\"contaAtiva\":false"
 
     it "valida nome, e-mail, telefone e CEP" $ do
         t <- bibliotecario
-        enviarJson (Just t) ApiSociosR $ object
+        enviarJson (Just t) SociosR $ object
             ["nome" .= ("" :: Text), "email" .= ("sem-arroba" :: Text), "telefone" .= ("123" :: Text), "cep" .= ("1234" :: Text)]
         statusIs 400
         forM_ ["nome", "email", "telefone", "cep"] $ \c -> bodyContains ("\"" <> c <> "\":")
@@ -48,7 +48,7 @@ spec = withApp $ describe "API de sócios" $ do
     it "recusa e-mail repetido" $ do
         t <- bibliotecario
         _ <- runDB $ insert $ Socio "Ana" "ana@example.com" Nothing Nothing Nothing Nothing Nothing Nothing Nothing
-        enviarJson (Just t) ApiSociosR $ object ["nome" .= ("Outra Ana" :: Text), "email" .= ("ANA@example.com" :: Text)]
+        enviarJson (Just t) SociosR $ object ["nome" .= ("Outra Ana" :: Text), "email" .= ("ANA@example.com" :: Text)]
         statusIs 409
 
     it "trocar o e-mail troca o login do app e mantém o endereço do mesmo CEP" $ do
@@ -58,7 +58,7 @@ spec = withApp $ describe "API de sócios" $ do
             usuario <- setPassword "senha-socio-1" (User "ana@example.com" Nothing PapelSocio (Just socioId))
             insert_ usuario
             return socioId
-        enviar "PUT" t (ApiSocioR socioId) $ object
+        enviar "PUT" t (SocioR socioId) $ object
             ["nome" .= ("Ana Souza" :: Text), "email" .= ("ana.souza@example.com" :: Text), "cep" .= ("01001-000" :: Text), "numero" .= ("200" :: Text)]
         statusIs 200
         socio <- runDB $ getJust socioId
@@ -77,9 +77,9 @@ spec = withApp $ describe "API de sócios" $ do
             usuario <- setPassword "senha-socio-1" (User "bia@example.com" Nothing PapelSocio (Just b))
             insert_ usuario
             return (a, b)
-        comToken (Just t) (ApiSocioR comHistorico) "DELETE"
+        comToken (Just t) (SocioR comHistorico) "DELETE"
         statusIs 409
-        comToken (Just t) (ApiSocioR semHistorico) "DELETE"
+        comToken (Just t) (SocioR semHistorico) "DELETE"
         statusIs 204
         conta <- runDB $ getBy (UniqueUser "bia@example.com")
         assertEq "conta apagada" True (isNothing conta)
