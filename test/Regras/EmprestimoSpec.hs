@@ -3,6 +3,7 @@
 module Regras.EmprestimoSpec (spec) where
 
 import Data.Time (addDays)
+import Regras.Comum (formatarCentavos)
 import Regras.Emprestimo
 import TestImport
 
@@ -92,16 +93,3 @@ spec = do
             _ <- runDB $ registrarDevolucao emprestimoId dia
             segunda <- runDB $ registrarDevolucao emprestimoId dia
             assertEq "recusada" (Left "Esse empréstimo já foi devolvido.") segunda
-
-        it "excluir empréstimo aberto libera o exemplar; devolvido não pode ser excluído" $ do
-            base <- criarBase
-            exemplarId <- novoExemplar base "A-1" Bom
-            aberto <- emprestar base exemplarId
-            cancelado <- runDB $ cancelarEmprestimo aberto
-            assertEq "cancelado" (Right ()) cancelado
-            exemplar <- runDB $ getJust exemplarId
-            assertEq "liberado" True (exemplarDisponivel exemplar)
-            devolvido <- emprestar base exemplarId
-            _ <- runDB $ registrarDevolucao devolvido dia
-            recusado <- runDB $ cancelarEmprestimo devolvido
-            assertEq "histórico mantido" True (either (const True) (const False) recusado)

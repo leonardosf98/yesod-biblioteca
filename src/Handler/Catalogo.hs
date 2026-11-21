@@ -1,77 +1,81 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiCatalogo
-    ( getApiLivrosR
-    , getApiLivroR
+module Handler.Catalogo
+    ( getLivrosR
+    , getLivroR
     ) where
 
 import Import
-import Filtro (contem)
+import Api.Filtro
+import Api.Relacionados (contarPorChave)
 import qualified Data.Map.Strict as Map
-import qualified Data.Text as T
 import Regras.Pedido (expirarPedidos)
-import Control.Monad (mfilter)
 
 data Contagem = Contagem { disponiveis :: Int, fila :: Int }
 
-getApiLivrosR :: Handler Value
-getApiLivrosR = do
-    busca <- mfilter (not . null) . fmap T.strip <$> lookupGetParam "busca"
-    categoriaFiltro <- (>>= fromPathPiece) <$> lookupGetParam "categoria"
+data Pagina = Pagina { numeroDaPagina :: Int, porPagina :: Int }
+
+getLivrosR :: Handler Value
+getLivrosR = do
+    busca <- parametroDeBusca
+    categoria <- (>>= fromPathPiece) <$> lookupGetParam "categoria"
     situacao <- lookupGetParam "situacao"
-    pagina <- max 1 . fromMaybe 1 . (>>= readMay) <$> lookupGetParam "pagina"
-    porPagina <- min 100 . max 1 . fromMaybe 24 . (>>= readMay) <$> lookupGetParam "porPagina"
+    pagina <- Pagina <$> parametroInteiro "pagina" 1 (1, maxBound) <*> parametroInteiro "porPagina" 24 (1, 100)
     agora <- liftIO getCurrentTime
-    (livros, total, categorias, autoresPorLivro, contagens) <- runDB $ do
+    (livros, total, categorias, autores, contagens) <- runDB $ do
         expirarPedidos agora
-        porAutor <- case busca of
-            Nothing -> return []
-            Just texto -> do
-                autores <- selectKeysList [contem AutorNome texto] []
-                map (livroAutorLivroId . entityVal) <$> selectList [LivroAutorAutorId <-. autores] []
-        let filtroBusca = case busca of
-                Nothing -> []
-                Just texto -> [contem LivroTitulo texto] ||. [LivroIsbn ==. Just texto] ||. [LivroId <-. porAutor]
-            filtroCategoria = maybe [] (\c -> [LivroCategoriaId ==. c]) categoriaFiltro
-        filtroSituacao <- case situacao of
-            Just "disponivel" -> (\ids -> [LivroId <-. ids]) <$> livrosComExemplarLivre
-            Just "indisponivel" -> (\ids -> [LivroId /<-. ids]) <$> livrosComExemplarLivre
-            Just "fila" -> (\ids -> [LivroId <-. ids]) . map (reservaLivroId . entityVal)
-                <$> selectList [ReservaStatus ==. Ativa] []
-            _ -> return []
-        let filtros = filtroBusca ++ filtroCategoria ++ filtroSituacao
+        porBusca <- filtroDeBusca busca
+        porSituacao <- filtroDeSituacao situacao
+        let filtros = porBusca ++ filtroDeCategoria categoria ++ porSituacao
         total <- count filtros
         livros <- selectList filtros
-            [Asc LivroTitulo, Asc LivroId, LimitTo porPagina, OffsetBy ((pagina - 1) * porPagina)]
+            [ Asc LivroTitulo, Asc LivroId
+            , LimitTo (porPagina pagina), OffsetBy ((numeroDaPagina pagina - 1) * porPagina pagina)
+            ]
         categorias <- selectList [] [Asc CategoriaNome]
         let ids = map entityKey livros
         autores <- autoresDosLivros ids
         contagens <- contagensDosLivros ids
         return (livros, total, categorias, autores, contagens)
-    let nomeCategoria = Map.fromList [(k, categoriaNome v) | Entity k v <- categorias]
-    returnJson $ object
-        [ "livros" .=
-            [ object
-                [ "id" .= livroId
-                , "titulo" .= livroTitulo livro
-                , "ano" .= livroAno livro
-                , "capaUrl" .= livroCapaUrl livro
-                , "autores" .= map (autorNome . entityVal) (Map.findWithDefault [] livroId autoresPorLivro)
-                , "categoria" .= categoriaJson (livroCategoriaId livro) (Map.lookup (livroCategoriaId livro) nomeCategoria)
-                , "disponiveis" .= disponiveis (contagemDe livroId contagens)
-                , "fila" .= fila (contagemDe livroId contagens)
-                ]
-            | Entity livroId livro <- livros
+    let nomeDaCategoria = Map.fromList [(k, categoriaNome v) | Entity k v <- categorias]
+        itemJson (Entity livroId livro) = object
+            [ "id" .= livroId
+            , "titulo" .= livroTitulo livro
+            , "ano" .= livroAno livro
+            , "capaUrl" .= livroCapaUrl livro
+            , "autores" .= map (autorNome . entityVal) (Map.findWithDefault [] livroId autores)
+            , "categoria" .= categoriaJson (livroCategoriaId livro) (Map.lookup (livroCategoriaId livro) nomeDaCategoria)
+            , "disponiveis" .= disponiveis (contagemDe livroId contagens)
+            , "fila" .= fila (contagemDe livroId contagens)
             ]
+    returnJson $ object
+        [ "livros" .= map itemJson livros
         , "categorias" .= [categoriaJson k (Just (categoriaNome v)) | Entity k v <- categorias]
-        , "pagina" .= pagina
-        , "porPagina" .= porPagina
+        , "pagina" .= numeroDaPagina pagina
+        , "porPagina" .= porPagina pagina
         , "total" .= total
-        , "paginas" .= max 1 ((total + porPagina - 1) `div` porPagina)
+        , "paginas" .= max 1 ((total + porPagina pagina - 1) `div` porPagina pagina)
         ]
 
-getApiLivroR :: LivroId -> Handler Value
-getApiLivroR livroId = do
+filtroDeBusca :: MonadIO m => Maybe Text -> ReaderT SqlBackend m [Filter Livro]
+filtroDeBusca Nothing = return []
+filtroDeBusca (Just texto) = do
+    autores <- selectKeysList [contem AutorNome texto] []
+    doAutor <- map (livroAutorLivroId . entityVal) <$> selectList [LivroAutorAutorId <-. autores] []
+    return $ [contem LivroTitulo texto] ||. [LivroIsbn ==. Just texto] ||. [LivroId <-. doAutor]
+
+filtroDeCategoria :: Maybe CategoriaId -> [Filter Livro]
+filtroDeCategoria = maybe [] (\c -> [LivroCategoriaId ==. c])
+
+filtroDeSituacao :: MonadIO m => Maybe Text -> ReaderT SqlBackend m [Filter Livro]
+filtroDeSituacao situacao = case situacao of
+    Just "disponivel" -> (\ids -> [LivroId <-. ids]) <$> livrosComExemplarLivre
+    Just "indisponivel" -> (\ids -> [LivroId /<-. ids]) <$> livrosComExemplarLivre
+    Just "fila" -> (\ids -> [LivroId <-. ids]) . map (reservaLivroId . entityVal) <$> selectList [ReservaStatus ==. Ativa] []
+    _ -> return []
+
+getLivroR :: LivroId -> Handler Value
+getLivroR livroId = do
     agora <- liftIO getCurrentTime
     (livro, autores, editora, categoria, exemplares, contagens) <- runDB $ do
         expirarPedidos agora
@@ -84,6 +88,7 @@ getApiLivroR livroId = do
         return (livro, autores, editora, categoria, exemplares, contagens)
     bibliotecario <- maybe False ((== PapelBibliotecario) . userPapel . entityVal) <$> usuarioAtual
     let contagem = contagemDe livroId contagens
+        visivel (Entity _ e) = bibliotecario || exemplarEstado e /= Perdido
     returnJson $ object
         [ "id" .= livroId
         , "titulo" .= livroTitulo livro
@@ -95,16 +100,7 @@ getApiLivroR livroId = do
         , "editoraId" .= livroEditoraId livro
         , "categoria" .= categoriaJson (livroCategoriaId livro) (categoriaNome <$> categoria)
         , "autores" .= [object ["id" .= k, "nome" .= autorNome v] | Entity k v <- Map.findWithDefault [] livroId autores]
-        , "exemplares" .=
-            [ object
-                [ "id" .= k
-                , "codigo" .= exemplarCodigo e
-                , "estado" .= estadoTexto (exemplarEstado e)
-                , "disponivel" .= exemplarDisponivel e
-                ]
-            | Entity k e <- exemplares
-            , bibliotecario || exemplarEstado e /= Perdido
-            ]
+        , "exemplares" .= map exemplarJson (filter visivel exemplares)
         , "disponiveis" .= disponiveis contagem
         , "fila" .= fila contagem
         ]
@@ -124,9 +120,8 @@ contagensDosLivros :: MonadIO m => [LivroId] -> ReaderT SqlBackend m (Map LivroI
 contagensDosLivros ids = do
     livres <- selectList [ExemplarLivroId <-. ids, ExemplarDisponivel ==. True, ExemplarEstado !=. Perdido] []
     reservas <- selectList [ReservaLivroId <-. ids, ReservaStatus ==. Ativa] []
-    let contar chaves = Map.fromListWith (+) [(k, 1 :: Int) | k <- chaves]
-        livresPorLivro = contar (map (exemplarLivroId . entityVal) livres)
-        filaPorLivro = contar (map (reservaLivroId . entityVal) reservas)
+    let livresPorLivro = contarPorChave (map (exemplarLivroId . entityVal) livres)
+        filaPorLivro = contarPorChave (map (reservaLivroId . entityVal) reservas)
     return $ Map.fromList
         [ (k, Contagem (Map.findWithDefault 0 k livresPorLivro) (Map.findWithDefault 0 k filaPorLivro))
         | k <- ids
@@ -143,8 +138,10 @@ contagemDe = Map.findWithDefault (Contagem 0 0)
 categoriaJson :: CategoriaId -> Maybe Text -> Value
 categoriaJson k nome = object ["id" .= k, "nome" .= nome]
 
-estadoTexto :: EstadoExemplar -> Text
-estadoTexto Bom = "bom"
-estadoTexto Danificado = "danificado"
-estadoTexto Perdido = "perdido"
-
+exemplarJson :: Entity Exemplar -> Value
+exemplarJson (Entity k e) = object
+    [ "id" .= k
+    , "codigo" .= exemplarCodigo e
+    , "estado" .= estadoTexto (exemplarEstado e)
+    , "disponivel" .= exemplarDisponivel e
+    ]

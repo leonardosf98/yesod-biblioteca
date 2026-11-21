@@ -17,12 +17,12 @@ spec = withApp $ describe "Raiz e erros da API" $ do
         get ("/api/nao-existe" :: Text)
         statusIs 404
         bodyContains "\"erro\":\"Recurso não encontrado.\""
-        comToken Nothing ApiPainelR "GET"
+        comToken Nothing PainelR "GET"
         statusIs 401
         bodyContains "\"erro\""
 
     it "não cria cookie de sessão" $ do
-        comToken Nothing ApiLivrosR "GET"
+        comToken Nothing LivrosR "GET"
         statusIs 200
         resposta <- getResponse
         let cabecalhos = maybe [] simpleHeaders resposta

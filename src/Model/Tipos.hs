@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Model.Tipos where
 
@@ -19,3 +20,11 @@ derivePersistField "Papel"
 data StatusPedido = PedidoAguardando | PedidoRetirado | PedidoExpirado | PedidoCancelado
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 derivePersistField "StatusPedido"
+
+estadoTexto :: EstadoExemplar -> Text
+estadoTexto Bom = "bom"
+estadoTexto Danificado = "danificado"
+estadoTexto Perdido = "perdido"
+
+estadoDoTexto :: Text -> Maybe EstadoExemplar
+estadoDoTexto t = find ((== t) . estadoTexto) [minBound .. maxBound]

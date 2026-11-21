@@ -3,7 +3,7 @@
 module RotinaSpec (spec) where
 
 import Data.Time (addDays, addUTCTime)
-import Regras.Emprestimo (hoje)
+import Regras.Comum (hoje)
 import Rotina (rodarRotinaEm)
 import TestImport
 

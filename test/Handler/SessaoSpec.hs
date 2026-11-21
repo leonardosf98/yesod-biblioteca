@@ -1,12 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.ApiSessaoSpec (spec) where
+module Handler.SessaoSpec (spec) where
 
 import ApiTeste
 import Data.Time (addUTCTime)
-import Sessao (hashToken)
+import Token (hashToken)
 import TestImport
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 
 spec :: Spec
 spec = withApp $ describe "API de sessões" $ do
@@ -15,7 +15,7 @@ spec = withApp $ describe "API de sessões" $ do
         entrarNaApi "maria" "senha-forte-123"
         statusIs 201
         token <- tokenDaResposta
-        comToken (Just token) ApiEuR "GET"
+        comToken (Just token) EuR "GET"
         statusIs 200
         bodyContains "\"papel\":\"bibliotecario\""
         bodyContains "\"login\":\"maria\""
@@ -39,23 +39,23 @@ spec = withApp $ describe "API de sessões" $ do
         statusIs 401
 
     it "sem token a API responde 401 em JSON" $ do
-        comToken Nothing ApiEuR "GET"
+        comToken Nothing EuR "GET"
         statusIs 401
 
     it "token desconhecido ou vencido é recusado" $ do
         usuario <- createUser "maria"
         agora <- liftIO getCurrentTime
         runDB $ insert_ $ Sessao (entityKey usuario) (hashToken "vencido") (addUTCTime (-60) agora)
-        comToken (Just "vencido") ApiEuR "GET"
+        comToken (Just "vencido") EuR "GET"
         statusIs 401
-        comToken (Just "inventado") ApiEuR "GET"
+        comToken (Just "inventado") EuR "GET"
         statusIs 401
 
     it "sair invalida o token" $ do
         _ <- runDB $ salvarBibliotecario "maria" "senha-forte-123"
         entrarNaApi "maria" "senha-forte-123"
         token <- tokenDaResposta
-        comToken (Just token) ApiSessoesR "DELETE"
+        comToken (Just token) SessoesR "DELETE"
         statusIs 204
-        comToken (Just token) ApiEuR "GET"
+        comToken (Just token) EuR "GET"
         statusIs 401

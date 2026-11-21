@@ -4,7 +4,7 @@ import System.Environment (getArgs)
 import System.Exit (die)
 import Control.Exception (bracket_)
 import System.IO (hFlush, hIsTerminalDevice, hPutStr, hSetEcho, stderr, stdin)
-import Usuario (salvarBibliotecario)
+import Regras.Conta (salvarBibliotecario)
 
 main :: IO ()
 main = do

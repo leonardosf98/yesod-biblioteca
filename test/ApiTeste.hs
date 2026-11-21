@@ -26,7 +26,7 @@ enviarJson token rota corpo = request $ do
     setRequestBody (encode corpo)
 
 entrarNaApi :: Text -> Text -> YesodExample App ()
-entrarNaApi login senha = enviarJson Nothing ApiSessoesR $ object ["login" .= login, "senha" .= senha]
+entrarNaApi login senha = enviarJson Nothing SessoesR $ object ["login" .= login, "senha" .= senha]
 
 campoDaResposta :: FromJSON a => Text -> YesodExample App (Maybe a)
 campoDaResposta campo = do

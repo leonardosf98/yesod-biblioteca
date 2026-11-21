@@ -14,7 +14,7 @@ import Import.NoFoundation
 import Control.Monad.Logger (LogSource)
 import Data.Kind (Type)
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
-import Sessao (hashToken)
+import Token (hashToken)
 import Yesod.Core.Types (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 
@@ -42,12 +42,7 @@ instance Yesod App where
     makeSessionBackend _ = return Nothing
 
     isAuthorized :: Route App -> Bool -> Handler AuthResult
-    isAuthorized rota escrita
-        | rotaLivre rota = return Authorized
-        | not escrita && catalogo rota = return Authorized
-        | rota == ApiEuR || rotaDeNotificacao rota = exigirLogin
-        | rotaDoSocio rota = exigirPapel PapelSocio
-        | otherwise = exigirPapel PapelBibliotecario
+    isAuthorized rota escrita = verificarAcesso (acessoDa rota escrita)
 
     shouldLogIO :: App -> LogSource -> LogLevel -> IO Bool
     shouldLogIO app _source level =
@@ -71,40 +66,66 @@ instance Yesod App where
             PermissionDenied motivo -> motivo
             BadMethod _ -> "Método não permitido."
 
-rotaLivre :: Route App -> Bool
-rotaLivre rota = case rota of
+data Acesso = Publico | QualquerUsuario | SomenteSocio | SomenteBibliotecario
+
+acessoDa :: Route App -> Bool -> Acesso
+acessoDa rota escrita
+    | rotaPublica rota = Publico
+    | not escrita && leituraDoCatalogo rota = Publico
+    | rota == EuR || rotaDeNotificacao rota = QualquerUsuario
+    | rotaDoSocio rota = SomenteSocio
+    | otherwise = SomenteBibliotecario
+
+rotaPublica :: Route App -> Bool
+rotaPublica rota = case rota of
     HomeR -> True
     FaviconR -> True
     RobotsR -> True
-    ApiSessoesR -> True
-    ApiAtivacaoR -> True
+    SessoesR -> True
+    AtivacaoR -> True
     _ -> False
 
-catalogo :: Route App -> Bool
-catalogo rota = case rota of
-    ApiLivrosR -> True
-    ApiLivroR _ -> True
-    ApiAutoresR -> True
-    ApiEditorasR -> True
-    ApiCategoriasR -> True
+leituraDoCatalogo :: Route App -> Bool
+leituraDoCatalogo rota = case rota of
+    LivrosR -> True
+    LivroR _ -> True
+    AutoresR -> True
+    EditorasR -> True
+    CategoriasR -> True
     _ -> False
 
 rotaDeNotificacao :: Route App -> Bool
 rotaDeNotificacao rota = case rota of
-    ApiNotificacoesR -> True
-    ApiNotificacoesLeituraR -> True
-    ApiNotificacaoLeituraR _ -> True
+    NotificacoesR -> True
+    NotificacoesLeituraR -> True
+    NotificacaoLeituraR _ -> True
     _ -> False
 
 rotaDoSocio :: Route App -> Bool
 rotaDoSocio rota = case rota of
-    ApiLivroPedidosR _ -> True
-    ApiEuPedidoR _ -> True
-    ApiEuEmprestimosR -> True
-    ApiEuRenovacaoR _ -> True
-    ApiLivroReservasR _ -> True
-    ApiEuReservaR _ -> True
+    LivroPedidosR _ -> True
+    EuPedidoR _ -> True
+    EuEmprestimosR -> True
+    EuRenovacaoR _ -> True
+    LivroReservasR _ -> True
+    EuReservaR _ -> True
     _ -> False
+
+verificarAcesso :: Acesso -> Handler AuthResult
+verificarAcesso acesso = do
+    usuario <- case acesso of
+        Publico -> return Nothing
+        _ -> usuarioAtual
+    return $ case (acesso, entityVal <$> usuario) of
+        (Publico, _) -> Authorized
+        (_, Nothing) -> AuthenticationRequired
+        (QualquerUsuario, Just _) -> Authorized
+        (SomenteSocio, Just u)
+            | userPapel u == PapelSocio -> Authorized
+            | otherwise -> Unauthorized "Acesso restrito a sócios."
+        (SomenteBibliotecario, Just u)
+            | userPapel u == PapelBibliotecario -> Authorized
+            | otherwise -> Unauthorized "Acesso restrito ao bibliotecário."
 
 newtype UsuarioDaRequisicao = UsuarioDaRequisicao (Maybe (Entity User))
 
@@ -124,20 +145,6 @@ usuarioAtual = do
 
 exigirUsuario :: Handler (Entity User)
 exigirUsuario = usuarioAtual >>= maybe notAuthenticated return
-
-exigirLogin :: Handler AuthResult
-exigirLogin = maybe AuthenticationRequired (const Authorized) <$> usuarioAtual
-
-exigirPapel :: Papel -> Handler AuthResult
-exigirPapel papel = do
-    usuario <- usuarioAtual
-    return $ case usuario of
-        Nothing -> AuthenticationRequired
-        Just (Entity _ u)
-            | userPapel u == papel -> Authorized
-            | otherwise -> Unauthorized $ case papel of
-                PapelBibliotecario -> "Acesso restrito ao bibliotecário."
-                PapelSocio -> "Acesso restrito a sócios."
 
 instance YesodPersist App where
     type YesodPersistBackend App = SqlBackend
