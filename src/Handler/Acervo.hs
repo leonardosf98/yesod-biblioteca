@@ -107,7 +107,9 @@ postLivroImportacaoR = do
         Left NaoEncontrado -> do
             let erro = "ISBN não encontrado na Open Library." :: Text
             sendStatusJSON status404 $ object ["erro" .= erro, "campos" .= object ["isbn" .= erro]]
-        Left (Indisponivel erro) -> recusar status502 erro
+        Left Timeout -> recusar status504 "A Open Library demorou demais para responder. Tente de novo em instantes."
+        Left ErroDeRede -> recusar status502 "Não foi possível falar com a Open Library. Tente de novo em instantes."
+        Left RespostaInvalida -> recusar status502 "A Open Library respondeu com algo inesperado."
         Right externo -> do
             livroId <- runDB $ gravarLivroExterno categoriaId isbn externo
             criado $ object ["id" .= livroId]
