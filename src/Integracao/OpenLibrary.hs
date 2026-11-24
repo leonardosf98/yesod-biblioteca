@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 module Integracao.OpenLibrary
     ( LivroExterno (..)
     , ErroOpenLibrary (..)
@@ -34,7 +33,9 @@ data LivroExterno = LivroExterno
     deriving (Show, Eq)
 
 data ErroOpenLibrary
-    = Indisponivel Text
+    = ErroDeRede
+    | Timeout
+    | RespostaInvalida
     | NaoEncontrado
     deriving (Show, Eq)
 
@@ -48,16 +49,21 @@ buscarPorIsbn manager isbn = do
             $ addRequestHeader "User-Agent" "biblioteca-comunitaria/0.1 (projeto academico)"
             requisicao
     return $ case resultado of
-        Left (_ :: HttpException) -> Left (Indisponivel "Não foi possível falar com a Open Library. Tente de novo em instantes.")
+        Left excecao -> Left (classificar excecao)
         Right resposta
-            | getResponseStatusCode resposta /= 200 -> Left (Indisponivel "A Open Library respondeu com erro.")
+            | getResponseStatusCode resposta /= 200 -> Left RespostaInvalida
             | otherwise -> do
-                valor <- either (const (Left (Indisponivel "Resposta inesperada da Open Library."))) Right
+                valor <- either (const (Left RespostaInvalida)) Right
                     (eitherDecode (getResponseBody resposta))
-                encontrado <- first Indisponivel (interpretarResposta isbn valor)
+                encontrado <- first (const RespostaInvalida) (interpretarResposta isbn valor)
                 maybe (Left NaoEncontrado) Right encontrado
   where
     url = "https://openlibrary.org/api/books?format=json&jscmd=data&bibkeys=ISBN:" <> isbn
+
+classificar :: HttpException -> ErroOpenLibrary
+classificar (HttpExceptionRequest _ ResponseTimeout) = Timeout
+classificar (HttpExceptionRequest _ ConnectionTimeout) = Timeout
+classificar _ = ErroDeRede
 
 interpretarResposta :: Text -> Value -> Either Text (Maybe LivroExterno)
 interpretarResposta isbn = either (const (Left "Resposta inesperada da Open Library.")) Right . parseEither raiz
