@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Integracao.OpenLibrary
     ( LivroExterno (..)
+    , ErroOpenLibrary (..)
     , buscarPorIsbn
     , interpretarResposta
     ) where
@@ -32,7 +33,12 @@ data LivroExterno = LivroExterno
     }
     deriving (Show, Eq)
 
-buscarPorIsbn :: Manager -> Text -> IO (Either Text LivroExterno)
+data ErroOpenLibrary
+    = Indisponivel Text
+    | NaoEncontrado
+    deriving (Show, Eq)
+
+buscarPorIsbn :: Manager -> Text -> IO (Either ErroOpenLibrary LivroExterno)
 buscarPorIsbn manager isbn = do
     resultado <- try $ do
         requisicao <- parseRequest (unpack url)
@@ -42,14 +48,14 @@ buscarPorIsbn manager isbn = do
             $ addRequestHeader "User-Agent" "biblioteca-comunitaria/0.1 (projeto academico)"
             requisicao
     return $ case resultado of
-        Left (_ :: HttpException) -> Left "Não foi possível falar com a Open Library. Tente de novo em instantes."
+        Left (_ :: HttpException) -> Left (Indisponivel "Não foi possível falar com a Open Library. Tente de novo em instantes.")
         Right resposta
-            | getResponseStatusCode resposta /= 200 -> Left "A Open Library respondeu com erro."
+            | getResponseStatusCode resposta /= 200 -> Left (Indisponivel "A Open Library respondeu com erro.")
             | otherwise -> do
-                valor <- either (const (Left "Resposta inesperada da Open Library.")) Right
+                valor <- either (const (Left (Indisponivel "Resposta inesperada da Open Library."))) Right
                     (eitherDecode (getResponseBody resposta))
-                encontrado <- interpretarResposta isbn valor
-                maybe (Left "ISBN não encontrado na Open Library.") Right encontrado
+                encontrado <- first Indisponivel (interpretarResposta isbn valor)
+                maybe (Left NaoEncontrado) Right encontrado
   where
     url = "https://openlibrary.org/api/books?format=json&jscmd=data&bibkeys=ISBN:" <> isbn
 

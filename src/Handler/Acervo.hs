@@ -14,7 +14,7 @@ import Import
 import Api.Resposta
 import Api.Validacao
 import qualified Data.Text as T
-import Integracao.OpenLibrary (buscarPorIsbn)
+import Integracao.OpenLibrary (ErroOpenLibrary (..), buscarPorIsbn)
 import Regras.Acervo
 import Regras.Pedido (atenderFila)
 
@@ -104,7 +104,10 @@ postLivroImportacaoR = do
     manager <- getsYesod appHttpManager
     encontrado <- liftIO $ buscarPorIsbn manager isbn
     case encontrado of
-        Left erro -> sendStatusJSON status400 $ object ["erro" .= erro, "campos" .= object ["isbn" .= erro]]
+        Left NaoEncontrado -> do
+            let erro = "ISBN não encontrado na Open Library." :: Text
+            sendStatusJSON status404 $ object ["erro" .= erro, "campos" .= object ["isbn" .= erro]]
+        Left (Indisponivel erro) -> recusar status502 erro
         Right externo -> do
             livroId <- runDB $ gravarLivroExterno categoriaId isbn externo
             criado $ object ["id" .= livroId]
