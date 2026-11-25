@@ -8,11 +8,14 @@ import Database.Persist.Sql (fromSqlKey)
 import Model
 import Model.Tipos
 import Regras.Comum (hoje)
+import Regras.Emprestimo (calcularMulta, novoEmprestimo, separarExemplar)
+import Regras.Pedido (pedirLivro)
 
 popular :: MonadIO m => ReaderT SqlBackend m ()
 popular = do
     exemplo
     acrescentarAcervo
+    circulacao
 
 exemplo :: MonadIO m => ReaderT SqlBackend m ()
 exemplo = do
@@ -60,6 +63,99 @@ exemplo = do
             ]
 
         insert_ $ Reserva fundacao ana dia Ativa
+
+data Situacao
+    = EmAberto Integer
+    | Devolvido Integer Integer Bool
+
+data Movimento = Movimento Text Text Situacao
+
+circulacao :: MonadIO m => ReaderT SqlBackend m ()
+circulacao = do
+    jaPopulado <- getBy (UniqueSocioEmail "carla@example.com")
+    when (isNothing jaPopulado) $ do
+        dia <- hoje
+        agora <- liftIO getCurrentTime
+        insertMany_ socios
+        mapM_ (registrarMovimento dia) movimentos
+        forM_ reservas $ \(email, titulo, diasAtras) -> do
+            socio <- socioPorEmail email
+            livro <- livroPorTitulo titulo
+            forM_ ((,) <$> socio <*> livro) $ \(s, l) ->
+                insert_ (Reserva l s (addDays (negate diasAtras) dia) Ativa)
+        forM_ pedidos $ \(email, titulo) -> do
+            socio <- socioPorEmail email
+            livro <- livroPorTitulo titulo
+            forM_ ((,) <$> socio <*> livro) $ \(s, l) -> void (pedirLivro s l agora dia)
+  where
+    socios =
+        [ Socio "Carla Mendes" "carla@example.com" (Just "11988880001")
+            (Just "01310100") (Just "Avenida Paulista") (Just "1000") (Just "Bela Vista") (Just "São Paulo") (Just "SP")
+        , semEndereco "Daniel Rocha" "daniel@example.com" (Just "11988880002")
+        , semEndereco "Elisa Fernandes" "elisa@example.com" (Just "11988880003")
+        , semEndereco "Fábio Martins" "fabio@example.com" Nothing
+        , semEndereco "Gabriela Nunes" "gabriela@example.com" (Just "11988880005")
+        , semEndereco "Henrique Alves" "henrique@example.com" Nothing
+        , Socio "Isabela Costa" "isabela@example.com" (Just "11988880007")
+            (Just "01001000") (Just "Praça da Sé") (Just "50") (Just "Sé") (Just "São Paulo") (Just "SP")
+        , semEndereco "João Pereira" "joao@example.com" (Just "11988880008")
+        , semEndereco "Karina Duarte" "karina@example.com" Nothing
+        , semEndereco "Lucas Ribeiro" "lucas@example.com" (Just "11988880010")
+        ]
+    semEndereco nome email telefone = Socio nome email telefone Nothing Nothing Nothing Nothing Nothing Nothing
+    movimentos =
+        [ Movimento "carla@example.com" "1984" (EmAberto 30)
+        , Movimento "daniel@example.com" "Duna" (EmAberto 25)
+        , Movimento "elisa@example.com" "O Cortiço" (EmAberto 20)
+        , Movimento "fabio@example.com" "Neuromancer" (EmAberto 12)
+        , Movimento "gabriela@example.com" "Os Maias" (EmAberto 12)
+        , Movimento "henrique@example.com" "Fahrenheit 451" (EmAberto 12)
+        , Movimento "isabela@example.com" "Código Limpo" (EmAberto 12)
+        , Movimento "carla@example.com" "Frankenstein" (EmAberto 10)
+        , Movimento "joao@example.com" "Iracema" (EmAberto 5)
+        , Movimento "karina@example.com" "Programming in Haskell" (EmAberto 3)
+        , Movimento "lucas@example.com" "O Guarani" (Devolvido 40 22 False)
+        , Movimento "daniel@example.com" "Quincas Borba" (Devolvido 50 30 True)
+        , Movimento "joao@example.com" "Helena" (Devolvido 30 20 False)
+        ]
+    reservas =
+        [ ("karina@example.com", "Neuromancer", 2)
+        , ("joao@example.com", "Frankenstein", 1)
+        ]
+    pedidos =
+        [ ("gabriela@example.com", "Duna")
+        , ("henrique@example.com", "Admirável Mundo Novo")
+        ]
+
+registrarMovimento :: MonadIO m => Day -> Movimento -> ReaderT SqlBackend m ()
+registrarMovimento dia (Movimento email titulo situacao) = do
+    socio <- socioPorEmail email
+    exemplar <- livroPorTitulo titulo >>= maybe (return Nothing) exemplarLivre
+    forM_ ((,) <$> socio <*> exemplar) $ \(s, e) -> case situacao of
+        EmAberto diasAtras -> do
+            separado <- separarExemplar e
+            when separado $ insert_ (novoEmprestimo s e (diasAntes diasAtras))
+        Devolvido diasAtras devolvidoHa multaPaga -> do
+            let emprestimo = novoEmprestimo s e (diasAntes diasAtras)
+                devolucao = diasAntes devolvidoHa
+                multa = calcularMulta (emprestimoDataPrevista emprestimo) devolucao
+            insert_ emprestimo
+                { emprestimoDataDevolucao = Just devolucao
+                , emprestimoMultaCentavos = multa
+                , emprestimoMultaPagaEm = if multaPaga && multa > 0 then Just devolucao else Nothing
+                }
+  where
+    diasAntes n = addDays (negate n) dia
+
+socioPorEmail :: MonadIO m => Text -> ReaderT SqlBackend m (Maybe SocioId)
+socioPorEmail email = fmap entityKey <$> getBy (UniqueSocioEmail email)
+
+livroPorTitulo :: MonadIO m => Text -> ReaderT SqlBackend m (Maybe LivroId)
+livroPorTitulo titulo = fmap entityKey <$> selectFirst [LivroTitulo ==. titulo] []
+
+exemplarLivre :: MonadIO m => LivroId -> ReaderT SqlBackend m (Maybe ExemplarId)
+exemplarLivre livro = fmap entityKey <$>
+    selectFirst [ExemplarLivroId ==. livro, ExemplarDisponivel ==. True, ExemplarEstado ==. Bom] [Asc ExemplarCodigo]
 
 data LivroExtra = LivroExtra
     { extraTitulo :: Text

@@ -57,6 +57,8 @@ cd web && npm ci && npm run dev   # frontend em http://localhost:3001 (API_URL, 
 
 O seed traz 68 livros: obras em domínio público do [Project Gutenberg](https://www.gutenberg.org/) e alguns títulos de ficção científica e técnicos. As capas ficam em `web/public/capas/` e vêm da [Open Library](https://openlibrary.org/).
 
+Também traz 12 sócios e uma circulação montada a partir do dia em que roda: quatro empréstimos atrasados, quatro vencendo em dois dias, uma multa em aberto, três reservas na fila e dois pedidos aguardando retirada. Assim o painel, o balcão e os avisos da rotina têm o que mostrar logo de cara.
+
 Para criar ou trocar a senha de um bibliotecário:
 
 ```bash

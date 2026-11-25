@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module SeedSpec (spec) where
 
+import Data.Time (addDays)
+import Regras.Comum (hoje)
 import Seed (popular)
 import TestImport
 
@@ -38,12 +40,12 @@ spec = withApp $ do
         it "acrescenta o acervo num banco que já tinha o exemplo" $ do
             runDB popular
             runDB $ do
-                duna <- selectKeysList [LivroTitulo ==. "Duna"] []
-                deleteWhere [ExemplarLivroId <-. duna]
-                deleteWhere [LivroId <-. duna]
+                lusiadas <- selectKeysList [LivroTitulo ==. "Os Lusíadas"] []
+                deleteWhere [ExemplarLivroId <-. lusiadas]
+                deleteWhere [LivroId <-. lusiadas]
             runDB popular
-            duna <- runDB $ selectFirst [LivroTitulo ==. "Duna"] []
-            assertEq "Duna voltou" True (isJust duna)
+            lusiadas <- runDB $ selectFirst [LivroTitulo ==. "Os Lusíadas"] []
+            assertEq "Os Lusíadas voltou" True (isJust lusiadas)
 
         it "livros de domínio público vêm com capa, inclusive os do exemplo" $ do
             runDB popular
@@ -55,3 +57,26 @@ spec = withApp $ do
             abertos <- runDB $ selectList [EmprestimoDataDevolucao ==. Nothing] []
             exemplares <- runDB $ mapM (getJust . emprestimoExemplarId . entityVal) abertos
             assertEq "todos indisponíveis" True (not (any exemplarDisponivel exemplares))
+
+        it "traz a circulação de demonstração com atrasos e vencimentos próximos" $ do
+            runDB popular
+            dia <- hoje
+            socios <- runDB $ count ([] :: [Filter Socio])
+            atrasados <- runDB $ count [EmprestimoDataDevolucao ==. Nothing, EmprestimoDataPrevista <. dia]
+            vencendo <- runDB $ count [EmprestimoDataDevolucao ==. Nothing, EmprestimoDataPrevista ==. addDays 2 dia]
+            multasAbertas <- runDB $ count [EmprestimoMultaCentavos >. 0, EmprestimoMultaPagaEm ==. Nothing]
+            reservas <- runDB $ count [ReservaStatus ==. Ativa]
+            pedidos <- runDB $ count [PedidoStatus ==. PedidoAguardando]
+            assertEq "doze sócios" 12 socios
+            assertEq "três atrasados novos além do da Ana" 4 atrasados
+            assertEq "quatro vencendo em dois dias" 4 vencendo
+            assertEq "uma multa em aberto" 1 multasAbertas
+            assertEq "três reservas ativas" 3 reservas
+            assertEq "dois pedidos aguardando" 2 pedidos
+
+        it "não duplica a circulação quando roda duas vezes" $ do
+            runDB popular
+            emprestimos <- runDB $ count ([] :: [Filter Emprestimo])
+            runDB popular
+            emprestimos' <- runDB $ count ([] :: [Filter Emprestimo])
+            assertEq "mesma quantidade de empréstimos" emprestimos emprestimos'
